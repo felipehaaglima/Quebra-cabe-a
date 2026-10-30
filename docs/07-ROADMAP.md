@@ -63,6 +63,8 @@
 
 ### F1.2 — Gestos mobile-first
 
+**Implementada:** pan/pinça/rotação com dois ponteiros, zoom pela roda no cursor e botões/teclado preservados. Transições de um/dois dedos, cancelamento, perda de foco e resize limpam ou rebaseiam o gesto. Testes automatizados cobrem mobile/desktop no Chromium; validação física em Android/iOS continua pendente.
+
 - Pointer Events para pan, pinch, rotate, mouse wheel e drag em áreas distintas.
 - Buttons alternativos para zoom, giro e centralizar.
 - Respeitar safe-area, mudanças de orientação e acessibilidade básica.

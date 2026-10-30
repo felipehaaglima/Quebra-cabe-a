@@ -1,6 +1,6 @@
 # Quebra-cabeça — jogo cozy, mobile-first
 
-> **Status em 30/10/2026:** Fase 1.1 implementada: fundação Next.js, landing e mesa navegável com PixiJS. **O jogo ainda não está implementado.**
+> **Status em 30/10/2026:** Fase 1.2 implementada: fundação Next.js, landing e mesa navegável com PixiJS. **O jogo ainda não está implementado.**
 
 Um jogo web de montar quebra-cabeças em uma mesa virtual acolhedora. O jogador navega por uma mesa grande, movimenta e gira peças, usa um tapete de montagem, organiza peças em sacolas etiquetadas, ganha moedas por progresso legítimo e desbloqueia novos puzzles. A experiência deve funcionar primeiro no celular e se adaptar elegantemente ao desktop.
 
@@ -63,7 +63,7 @@ npm ci
 npm run dev
 ```
 
-Abra a porta 3000 no seu ambiente local. O botão **Iniciar** abre `/play`, com uma mesa navegável em PixiJS v8. Arraste com um dedo ou mouse para mover a visão; use os botões para zoom, giro de 90° e centralização. Ao focar o canvas, as setas movem a visão, +/− ampliam/reduzem, R gira e Home centraliza. A mesa, o feltro 4:3 e as sacolas decorativas são desenhados proceduralmente, sem mídia externa. As peças, encaixes, pinça/rotação com dois dedos, áudio e persistência ainda não estão implementados. A câmera é temporária: recarregar ou sair da mesa restaura a visão inicial. É necessário WebGL disponível no navegador; falhas de inicialização mostram uma mensagem com opção de tentar novamente.
+Abra a porta 3000 no seu ambiente local. O botão **Iniciar** abre `/play`, com uma mesa navegável em PixiJS v8. Arraste com um dedo ou mouse para mover a visão. Com dois dedos, mova, faça pinça para zoom e gire a mesa ao redor do ponto entre os dedos. A roda do mouse amplia no cursor. Os botões oferecem zoom, giro de 90° e centralização como alternativa. Ao focar o canvas, as setas movem a visão, +/− ampliam/reduzem, R gira e Home centraliza. A mesa, o feltro 4:3 e as sacolas decorativas são desenhados proceduralmente, sem mídia externa. As peças, encaixes, áudio e persistência ainda não estão implementados. A câmera é temporária: recarregar ou sair da mesa restaura a visão inicial. É necessário WebGL disponível no navegador; falhas de inicialização mostram uma mensagem com opção de tentar novamente.
 
 ## Validação
 
@@ -76,7 +76,7 @@ npx playwright install --with-deps chromium
 npm run test:e2e
 ```
 
-Playwright inicia o servidor de produção automaticamente; execute o build antes e deixe a porta 3000 livre. Os projetos cobrem 390×844 com toque e 1440×900 com mouse, navegação por teclado, entrada na mesa, controles de câmera, arraste, rotação de viewport, recarregamento, saída/reentrada e ausência de overflow horizontal. As capturas ficam em `test-results/` (ignorado pelo Git). Para usar Chromium já instalado, informe `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` ao executar os testes. Não é necessário instalar browsers para os testes unitários.
+Playwright inicia o servidor de produção automaticamente; execute o build antes e deixe a porta 3000 livre. Os projetos cobrem 390×844 com toque e 1440×900 com mouse, navegação por teclado, entrada na mesa, controles de câmera, arraste, pinça/giro por toque emulado, roda do mouse, rotação de viewport, recarregamento, saída/reentrada e ausência de overflow horizontal. As capturas ficam em `test-results/` (ignorado pelo Git). Para usar Chromium já instalado, informe `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` ao executar os testes. Não é necessário instalar browsers para os testes unitários.
 
 Para servir manualmente o build: `npm run start`. `npm run test:watch` executa os testes de componentes em modo interativo.
 
@@ -84,7 +84,7 @@ A rota fica em `src/app`; a landing, em `src/components/landing`; a interface da
 
 ## Próximos passos
 
-A Fase 0.2 conecta a Vercel após o primeiro build validado e prepara assets licenciados. A Fase 1.1 entrega o canvas, mesa e câmera; a próxima implementação é a Fase 1.2, com pinça, rotação por gesto e roda do mouse. Depois vêm as peças e os encaixes da Fase 2. Testes em dispositivos reais de iOS/Android continuam necessários quando houver gestos e canvas.
+A Fase 0.2 conecta a Vercel após o primeiro build validado e prepara assets licenciados. A Fase 1.1 entrega o canvas, mesa e câmera; a Fase 1.2 acrescenta pinça, rotação por gesto e roda do mouse. O próximo passo é a Fase 2.1: definição determinística, recortes e distribuição inicial das peças. Depois vêm arraste, giro e encaixes. Testes em dispositivos reais de iOS/Android continuam necessários quando houver gestos e canvas.
 
 ## Organização de entregas
 

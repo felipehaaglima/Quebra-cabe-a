@@ -54,3 +54,17 @@ export function zoomCamera(camera: Camera, factor: number, anchor: Vec2, viewpor
   const after = screenToWorld(anchor, next, viewport);
   return limitCamera({ ...next, center: { x: next.center.x + before.x - after.x, y: next.center.y + before.y - after.y } }, viewport);
 }
+
+export type PointerPair = readonly [Vec2, Vec2];
+
+// Keep the world point under the original midpoint under the moving fingers.
+export function transformCamera(camera: Camera, before: PointerPair, after: PointerPair, viewport: Viewport): Camera {
+  const midpoint = (pair: PointerPair): Vec2 => ({ x: (pair[0].x + pair[1].x) / 2, y: (pair[0].y + pair[1].y) / 2 });
+  const distance = (pair: PointerPair) => Math.hypot(pair[1].x - pair[0].x, pair[1].y - pair[0].y);
+  const angle = (pair: PointerPair) => Math.atan2(pair[1].y - pair[0].y, pair[1].x - pair[0].x);
+  if (distance(before) < 8 || distance(after) < 8) return camera;
+  const anchor = screenToWorld(midpoint(before), camera, viewport);
+  const next = limitCamera({ ...camera, zoom: camera.zoom * distance(after) / distance(before), angleRad: camera.angleRad + angle(after) - angle(before) }, viewport);
+  const projected = screenToWorld(midpoint(after), next, viewport);
+  return limitCamera({ ...next, center: { x: next.center.x + anchor.x - projected.x, y: next.center.y + anchor.y - projected.y } }, viewport);
+}

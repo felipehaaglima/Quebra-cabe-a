@@ -78,7 +78,7 @@ export default function GameCanvas() {
         {!ready && <div className={styles.loading}><p role={failed ? 'alert' : 'status'}>{status}</p>{failed && <button onClick={() => { setFailed(false); setStatus('Preparando sua mesa…'); setAttempt((value) => value + 1); }}>Tentar novamente</button>}</div>}
       </div>
       <div className={styles.bottom}>
-        <p id="mesa-ajuda">Arraste a mesa para explorar. Use os controles para ampliar, girar e voltar ao tapete. As sacolas são decorativas nesta versão.</p>
+        <p id="mesa-ajuda">Arraste para mover. Use dois dedos para ampliar e girar, ou a roda do mouse para zoom. Centralizar volta ao tapete. As sacolas são decorativas nesta versão.</p>
         <nav className={styles.controls} aria-label="Controles da mesa">
           <button disabled={!ready} onClick={() => act('zoom-out')} aria-label="Diminuir zoom">−</button>
           <button disabled={!ready} onClick={() => act('zoom-in')} aria-label="Ampliar zoom">+</button>

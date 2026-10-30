@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { centerCamera, fitZoom, limitCamera, panCamera, screenToWorld, worldToScreen, zoomCamera } from '../../src/game/core/camera/camera';
+import { centerCamera, fitZoom, limitCamera, panCamera, transformCamera, screenToWorld, worldToScreen, zoomCamera } from '../../src/game/core/camera/camera';
 
 for (const viewport of [{ width: 390, height: 650 }, { width: 1440, height: 700 }]) {
   describe(`câmera ${viewport.width}`, () => {
@@ -43,3 +43,34 @@ for (const viewport of [{ width: 390, height: 650 }, { width: 1440, height: 700 
     });
   });
 }
+
+describe('transformação com dois dedos', () => {
+  const viewport = { width: 800, height: 600 };
+  const camera = centerCamera(viewport);
+  const before = [{ x: 350, y: 250 }, { x: 450, y: 250 }] as const;
+  it('combina pan, pinça e giro mantendo o ponto entre os dedos', () => {
+    const after = [{ x: 440, y: 190 }, { x: 440, y: 390 }] as const;
+    const next = transformCamera(camera, before, after, viewport);
+    expect(next.zoom).toBeCloseTo(camera.zoom * 2);
+    expect(next.angleRad).toBeCloseTo(Math.PI / 2);
+    const anchor = screenToWorld({ x: 400, y: 250 }, camera, viewport);
+    const actual = worldToScreen(anchor, next, viewport);
+    expect(actual.x).toBeCloseTo(440);
+    expect(actual.y).toBeCloseTo(290);
+    const restored = transformCamera(next, after, before, viewport);
+    expect(restored.center.x).toBeCloseTo(camera.center.x);
+    expect(restored.center.y).toBeCloseTo(camera.center.y);
+    expect(restored.zoom).toBeCloseTo(camera.zoom);
+    expect(restored.angleRad).toBeCloseTo(0);
+  });
+  it('trata dedos coincidentes sem produzir zoom infinito', () => {
+    expect(transformCamera(camera, [before[0], before[0]], before, viewport)).toBe(camera);
+    expect(transformCamera(camera, before, [before[0], before[0]], viewport)).toBe(camera);
+  });
+  it('mantém limites sob pinça extrema e normaliza o giro ao cruzar 180°', () => {
+    const next = transformCamera(camera, before, [{ x: -10000, y: 200 }, { x: 10000, y: 200 }], viewport);
+    expect(next.zoom).toBe(fitZoom(viewport) * 4);
+    const rotated = transformCamera(camera, [{ x: 450, y: 299 }, { x: 350, y: 301 }], [{ x: 450, y: 301 }, { x: 350, y: 299 }], viewport);
+    expect(rotated.angleRad).toBeLessThan(0.05);
+  });
+});
