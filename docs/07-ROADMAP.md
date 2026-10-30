@@ -52,6 +52,8 @@
 
 ### F1.1 — Canvas e mundo
 
+**Implementada:** `/play` acessível por Iniciar, PixiJS v8 client-only, madeira/feltro procedural, tapete 4:3 e sacolas decorativas. Câmera pura com limites, pan por mouse/toque, zoom/giro/centralização por botões e teclado; resize preserva centro, ângulo e zoom relativo. Pinça/gestos com dois dedos e roda do mouse permanecem na F1.2.
+
 - Integrar PixiJS num Client Component com init/destroy correto.
 - Renderizar madeira, tapete central com aspect ratio correto, espaço livre e sacolas decorativas.
 - Implementar conversão world↔screen e câmera independente de estado do puzzle.

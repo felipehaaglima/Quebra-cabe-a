@@ -16,7 +16,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(48px, 8vw, 80px); font-weight: normal; line-height: 1.06; letter-spacing: -2px; }
 h1 em { color: #657552; }
 .intro { max-width: 350px; margin: 25px 0; font-size: 16px; line-height: 1.8; color: var(--muted); }
-.start-button { display: flex; align-items: center; justify-content: space-between; gap: 40px; min-height: 56px; min-width: 190px; padding: 16px 24px; border: 0; border-radius: 8px; background: #314d3c; color: #fffdf7; font-size: 16px; cursor: pointer; }
+.start-button { width: fit-content; text-decoration: none; display: flex; align-items: center; justify-content: space-between; gap: 40px; min-height: 56px; min-width: 190px; padding: 16px 24px; border: 0; border-radius: 8px; background: #314d3c; color: #fffdf7; font-size: 16px; cursor: pointer; }
 .start-button:hover { background: #243d2d; }
 .development-note { max-width: 350px; margin: 14px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .availability { margin-top: 16px; max-width: 350px; border-left: 3px solid #657552; padding: 8px 12px; font-size: 14px; line-height: 1.6; }
