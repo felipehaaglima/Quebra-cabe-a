@@ -1,7 +1,7 @@
 import { Application, Container, Graphics, Text, Texture } from 'pixi.js';
 import { MAT, WORLD, type Camera, type Viewport } from '../core/camera/camera';
 
-import { DEMO, generatePieces, distributePieces } from '../core/puzzle/puzzle';
+import { DEMO, type PieceGeometry, type Placement } from '../core/puzzle/puzzle';
 import { createPieceSprite } from './piece-sprite';
 
 export async function loadDemoTexture(): Promise<Texture> {
@@ -11,7 +11,7 @@ export async function loadDemoTexture(): Promise<Texture> {
   return Texture.from(image);
 }
 
-export function createWorld(texture: Texture) {
+export function createWorld(texture: Texture, pieces: readonly PieceGeometry[], placements: readonly Placement[]) {
   const world = new Container();
   const table = new Graphics().roundRect(-WORLD.width / 2, -WORLD.height / 2, WORLD.width, WORLD.height, 40).fill(0xd7b58e);
   // Procedural wood and fabric; no external media or random world state.
@@ -39,9 +39,9 @@ export function createWorld(texture: Texture) {
     const label = new Text({ text: index === 0 ? 'Bordas' : 'Cores', style: { fontFamily: 'Georgia, serif', fontSize: 20, fill: 0x604935 } });
     label.anchor.set(0.5); label.y = 6; bag.addChild(label); world.addChild(bag);
   }
-  const pieces = generatePieces(DEMO);
-  const placements = distributePieces(pieces, DEMO.seed);
-  for (let index = 0; index < pieces.length; index++) world.addChild(createPieceSprite(pieces[index], placements[index], DEMO, texture));
+  const layer = new Container(); layer.label = 'pieces';
+  for (let index = 0; index < pieces.length; index++) layer.addChild(createPieceSprite(pieces[index], placements[index], DEMO, texture));
+  world.addChild(layer);
   return world;
 }
 
@@ -51,4 +51,16 @@ export function drawScene(app: Application, world: Container, camera: Camera, vi
   world.pivot.set(camera.center.x, camera.center.y);
   world.position.set(viewport.width / 2, viewport.height / 2);
   app.render();
+}
+
+
+export function updatePieces(world: Container, placements: readonly Placement[], selectedId: string | null) {
+  const layer = world.getChildByLabel('pieces')!;
+  placements.forEach((placement, index) => {
+    const node = layer.getChildByLabel(`piece:${placement.pieceId}`)!;
+    node.position.set(placement.center.x, placement.center.y);
+    node.rotation = placement.quarterTurn * Math.PI / 2;
+    layer.setChildIndex(node, index);
+    node.getChildByLabel('selection')!.visible = placement.pieceId === selectedId;
+  });
 }

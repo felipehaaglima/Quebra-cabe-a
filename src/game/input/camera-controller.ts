@@ -1,4 +1,5 @@
-import { centerCamera, fitZoom, limitCamera, panCamera, zoomCamera, transformCamera, type Camera, type Viewport, type Vec2 } from '../core/camera/camera';
+import type { PieceInput } from './piece-controller';
+import { centerCamera, fitZoom, limitCamera, panCamera, zoomCamera, transformCamera, type Camera, type Viewport, type Vec2, screenToWorld, rotate } from '../core/camera/camera';
 
 export type CameraAction = 'zoom-in' | 'zoom-out' | 'rotate' | 'center' | 'left' | 'right' | 'up' | 'down';
 
@@ -8,9 +9,11 @@ export class CameraController {
   private detach: () => void;
   private cancelGesture: () => void;
 
-  constructor(private canvas: HTMLCanvasElement, viewport: Viewport, private onChange: (camera: Camera) => void) {
+  constructor(private canvas: HTMLCanvasElement, viewport: Viewport, private onChange: (camera: Camera) => void, private pieceInput?: PieceInput) {
     this.viewport = viewport;
     this.camera = centerCamera(viewport);
+    let pieceActive = false;
+    let pieceMoved = false;
     const pointers = new Map<number, Vec2>();
     let baseline: { camera: Camera; points: Vec2[] } | null = null;
     const localPoint = (event: PointerEvent): Vec2 => {
@@ -22,6 +25,7 @@ export class CameraController {
       canvas.style.cursor = pointers.size ? 'grabbing' : 'grab';
     };
     const clear = () => {
+      if (pieceActive) { pieceActive = false; this.pieceInput?.end(false); }
       const ids = [...pointers.keys()];
       pointers.clear(); rebase();
       for (const id of ids) if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
@@ -32,12 +36,22 @@ export class CameraController {
       canvas.focus({ preventScroll: true });
       canvas.setPointerCapture(event.pointerId);
       pointers.set(event.pointerId, localPoint(event));
+      pieceMoved = false;
+      if (pointers.size === 1) pieceActive = this.pieceInput?.begin(screenToWorld(localPoint(event), this.camera, this.viewport)) ?? false;
+      else if (pieceActive) { pieceActive = false; this.pieceInput?.end(false); }
       rebase();
     };
     const move = (event: PointerEvent) => {
       if (!pointers.has(event.pointerId) || !baseline) return;
       pointers.set(event.pointerId, localPoint(event));
       const current = [...pointers.values()];
+      if (pieceActive && current.length === 1) {
+        if (pieceMoved || Math.hypot(current[0].x - baseline.points[0].x, current[0].y - baseline.points[0].y) >= 6) {
+          pieceMoved = true;
+          this.pieceInput?.move(screenToWorld(current[0], this.camera, this.viewport));
+        }
+        return;
+      }
       if (current.length === 2) {
         this.camera = transformCamera(baseline.camera, [baseline.points[0], baseline.points[1]], [current[0], current[1]], this.viewport);
         // Rebase coincident fingers before they spread, avoiding division by zero.
@@ -49,6 +63,10 @@ export class CameraController {
     };
     const end = (event: PointerEvent) => {
       if (!pointers.delete(event.pointerId)) return;
+      if (pieceActive) {
+        pieceActive = false;
+        this.pieceInput?.end(event.type === 'pointerup');
+      }
       // Lifting a finger starts a fresh single-finger pan from this exact view.
       rebase();
       if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
@@ -64,6 +82,12 @@ export class CameraController {
     };
     const visibility = () => { if (document.hidden) clear(); };
     const key = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.key === 'Escape') { clear(); this.pieceInput?.select(null); return; }
+      if (event.key.toLowerCase() === 'r' && this.pieceInput?.rotate()) { event.preventDefault(); clear(); return; }
+      const deltas: Record<string, Vec2> = { ArrowLeft: { x: -20, y: 0 }, ArrowRight: { x: 20, y: 0 }, ArrowUp: { x: 0, y: -20 }, ArrowDown: { x: 0, y: 20 } };
+      const delta = deltas[event.key];
+      if (delta && this.pieceInput?.nudge(rotate({ x: delta.x / this.camera.zoom, y: delta.y / this.camera.zoom }, -this.camera.angleRad))) { event.preventDefault(); clear(); return; }
       const actions: Record<string, CameraAction> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', '+': 'zoom-in', '=': 'zoom-in', '-': 'zoom-out', r: 'rotate', Home: 'center' };
       const action = actions[event.key];
       if (action) { event.preventDefault(); this.act(action); }

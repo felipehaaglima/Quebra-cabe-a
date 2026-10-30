@@ -82,3 +82,45 @@ describe('controle de gestos', () => {
     expect(input.camera.center.y).toBeCloseTo(0);
   });
 });
+
+it('arbitra peça/câmera, desfaz ao entrar segundo dedo e permite continuar o gesto', () => {
+  const { canvas, input: oldInput, pointer } = setup();
+  oldInput.destroy();
+  const piece = { begin: vi.fn(() => true), move: vi.fn(), end: vi.fn(), rotate: vi.fn(() => false), nudge: vi.fn(() => false), select: vi.fn() };
+  const controller = new CameraController(canvas, { width: 800, height: 600 }, vi.fn(), piece);
+  input = controller;
+  const camera = structuredClone(controller.camera);
+  pointer('pointerdown', 1, 350, 300);
+  pointer('pointermove', 1, 351, 300);
+  expect(piece.move).not.toHaveBeenCalled();
+  pointer('pointermove', 1, 370, 300);
+  expect(piece.move).toHaveBeenCalledTimes(1);
+  expect(controller.camera).toEqual(camera);
+  pointer('pointerdown', 2, 450, 300);
+  expect(piece.end).toHaveBeenLastCalledWith(false);
+  pointer('pointermove', 2, 490, 300);
+  expect(controller.camera.zoom).toBeGreaterThan(camera.zoom);
+  pointer('pointerup', 2, 490, 300);
+  const calls = piece.move.mock.calls.length;
+  pointer('pointermove', 1, 380, 300);
+  expect(piece.move).toHaveBeenCalledTimes(calls);
+  pointer('pointerup', 1, 380, 300);
+  pointer('pointerdown', 3, 350, 300);
+  pointer('pointermove', 3, 390, 300);
+  pointer('pointercancel', 3, 390, 300);
+  expect(piece.end).toHaveBeenLastCalledWith(false);
+  pointer('pointerdown', 4, 350, 300);
+  pointer('pointerup', 4, 350, 300);
+  expect(piece.end).toHaveBeenLastCalledWith(true);
+});
+
+it('preserva atalhos do navegador com modificadores', () => {
+  const { canvas, input } = setup();
+  const before = structuredClone(input.camera);
+  for (const modifier of ['ctrlKey', 'metaKey', 'altKey']) {
+    const event = new KeyboardEvent('keydown', { key: 'r', [modifier]: true, cancelable: true });
+    canvas.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  }
+  expect(input.camera).toEqual(before);
+});

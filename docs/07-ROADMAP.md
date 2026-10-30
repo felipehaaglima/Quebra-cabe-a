@@ -85,6 +85,8 @@
 
 ### F2.2 — Movimentação e rotação
 
+**Implementada:** seleção por contorno real ou lista acessível, arraste com offset em world space, giro de 90° por botão/R, peça selecionada à frente e contorno dourado. Setas movem a seleção; Escape desmarca. Cancelar/perder foco/resize ou adicionar segundo dedo desfaz o drag e permite operar a câmera. Limites consideram o polígono girado inteiro. Estado permanece só em memória; encaixes e persistência são entregas posteriores.
+
 - Seleção e drag de peça, trazer para frente, quartos de volta, desfazer soltar se inválido.
 - Separação clara entre pan da câmera e drag de peça, cancelamento de gesto seguro.
 - Testes 0°, 90°, 180°, 270° de câmera.

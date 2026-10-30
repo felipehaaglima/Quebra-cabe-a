@@ -11,7 +11,7 @@ test('24 peças, referência e distribuição reproduzível após recarregar', a
   await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
   await expect(canvas).toHaveAttribute('data-piece-count', '24');
   await expect(page.getByText('Lago sereno · 24 peças', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(/As peças ainda não podem ser movidas/)).toBeVisible();
+  await expect(page.getByText(/Arraste uma peça para movê-la/)).toBeVisible();
   const initial = await canvas.screenshot();
   const reference = page.locator('summary', { hasText: 'Ver imagem' });
   const target = (await reference.boundingBox())!;

@@ -24,3 +24,10 @@
 .reference img { display: block; width: 100%; height: auto; border-radius: 4px; }
 .reference figcaption { padding-top: 6px; color: #5e665c; }
 @media (max-height: 500px) { .reference { top: 62px; max-width: 160px; } }
+
+.selection { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; margin-bottom: 6px; }
+.selection select, .selection button { min-height: 44px; padding: 8px 12px; border: 1px solid #c0c7b5; border-radius: 8px; background: #fffdf7; color: #293b31; font-size: 13px; cursor: pointer; }
+.selection select { width: 140px; }
+.selection button:disabled { opacity: .5; cursor: default; }
+.selection output { width: 40px; font-size: 12px; font-variant-numeric: tabular-nums; }
+@media (max-height: 500px) { .selection { display: inline-flex; margin: 0 8px 0 0; } .controls { display: inline-flex; } .bottom { text-align: center; } }

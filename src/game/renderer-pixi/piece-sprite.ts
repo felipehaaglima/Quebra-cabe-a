@@ -17,7 +17,9 @@ export function createPieceSprite(piece: PieceGeometry, placement: Placement, de
   const mask = new Graphics().poly(points).fill(0xffffff);
   image.mask = mask;
   const outline = new Graphics().poly(points).stroke({ color: 0xf7ecd0, width: 1.5, alpha: 0.8 });
-  node.addChild(shadow, image, mask, outline);
+  const selection = new Graphics().poly(points).stroke({ color: 0xffd978, width: 5 });
+  selection.label = 'selection'; selection.visible = false;
+  node.addChild(shadow, image, mask, outline, selection);
   // Exact local contour, including tabs and sockets, ready for F2.2 input.
   node.hitArea = { contains: (x: number, y: number) => pointInPolygon({ x, y }, piece.polygon) };
   return node;
