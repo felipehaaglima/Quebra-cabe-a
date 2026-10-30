@@ -1,0 +1,50 @@
+import { expect, test } from '@playwright/test';
+
+test('24 peças, referência e distribuição reproduzível após recarregar', async ({ page, isMobile }, testInfo) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  const asset = await page.request.get('/puzzles/demo/lago-sereno-v1.svg');
+  expect(asset.ok()).toBe(true);
+  expect(await asset.text()).toContain('viewBox="0 0 800 600"');
+  await page.goto('/play');
+  const canvas = page.locator('canvas');
+  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await expect(canvas).toHaveAttribute('data-piece-count', '24');
+  await expect(page.getByText('Lago sereno · 24 peças', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/As peças ainda não podem ser movidas/)).toBeVisible();
+  const initial = await canvas.screenshot();
+  const reference = page.locator('summary', { hasText: 'Ver imagem' });
+  const target = (await reference.boundingBox())!;
+  expect(target.height).toBeGreaterThanOrEqual(44);
+  if (isMobile) await reference.tap(); else await reference.click();
+  const image = page.getByRole('img', { name: /Referência do puzzle/ });
+  await expect(image).toBeVisible();
+  expect(await image.evaluate((node) => (node as HTMLImageElement).naturalWidth)).toBe(800);
+  await page.screenshot({ path: testInfo.outputPath('referencia.png'), fullPage: true });
+  await reference.click();
+  await page.getByRole('button', { name: 'Ampliar zoom' }).click();
+  await page.getByRole('button', { name: 'Girar 90°' }).click();
+  await expect(canvas).toHaveAttribute('data-piece-count', '24');
+  await page.getByRole('button', { name: 'Centralizar' }).click();
+  expect(await canvas.screenshot()).toEqual(initial);
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await expect(canvas).toHaveAttribute('data-piece-count', '24');
+  expect(await canvas.screenshot()).toEqual(initial);
+  await page.screenshot({ path: testInfo.outputPath('pecas.png'), fullPage: true });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test('falha no asset libera a mesa e permite carregar novamente', async ({ page }) => {
+  let fail = true;
+  await page.route('**/puzzles/demo/lago-sereno-v1.svg', (route) => fail ? route.fulfill({ status: 404, body: 'missing', headers: { 'cache-control': 'no-store' } }) : route.continue());
+  await page.goto('/play');
+  await expect(page.getByRole('alert').filter({ hasText: 'Não foi possível abrir a mesa' })).toBeVisible();
+  await expect(page.locator('canvas')).toHaveCount(0);
+  fail = false;
+  await page.getByRole('button', { name: 'Tentar novamente' }).click();
+  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await expect(page.locator('canvas')).toHaveCount(1);
+  await expect(page.locator('canvas')).toHaveAttribute('data-piece-count', '24');
+});

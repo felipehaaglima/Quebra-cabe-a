@@ -35,7 +35,7 @@ for (const viewport of [{ width: 390, height: 650 }, { width: 1440, height: 700 
     });
     it('limita pan e zoom e recupera a visão inicial', () => {
       const next = limitCamera({ center: { x: 1e6, y: -1e6 }, zoom: 1e6, angleRad: 9 * Math.PI }, viewport);
-      expect(next.center).toEqual({ x: 400, y: -300 });
+      expect(next.center).toEqual({ x: 1200, y: -900 });
       expect(next.zoom).toBe(fitZoom(viewport) * 4);
       expect(next.angleRad).toBeCloseTo(Math.PI);
       const initial = centerCamera(viewport);

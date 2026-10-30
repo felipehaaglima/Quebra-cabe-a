@@ -1,7 +1,17 @@
-import { Application, Container, Graphics, Text } from 'pixi.js';
+import { Application, Container, Graphics, Text, Texture } from 'pixi.js';
 import { MAT, WORLD, type Camera, type Viewport } from '../core/camera/camera';
 
-export function createWorld() {
+import { DEMO, generatePieces, distributePieces } from '../core/puzzle/puzzle';
+import { createPieceSprite } from './piece-sprite';
+
+export async function loadDemoTexture(): Promise<Texture> {
+  const image = new Image();
+  image.src = '/puzzles/demo/lago-sereno-v1.svg';
+  await image.decode();
+  return Texture.from(image);
+}
+
+export function createWorld(texture: Texture) {
   const world = new Container();
   const table = new Graphics().roundRect(-WORLD.width / 2, -WORLD.height / 2, WORLD.width, WORLD.height, 40).fill(0xd7b58e);
   // Procedural wood and fabric; no external media or random world state.
@@ -29,6 +39,9 @@ export function createWorld() {
     const label = new Text({ text: index === 0 ? 'Bordas' : 'Cores', style: { fontFamily: 'Georgia, serif', fontSize: 20, fill: 0x604935 } });
     label.anchor.set(0.5); label.y = 6; bag.addChild(label); world.addChild(bag);
   }
+  const pieces = generatePieces(DEMO);
+  const placements = distributePieces(pieces, DEMO.seed);
+  for (let index = 0; index < pieces.length; index++) world.addChild(createPieceSprite(pieces[index], placements[index], DEMO, texture));
   return world;
 }
 

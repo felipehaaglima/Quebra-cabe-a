@@ -75,6 +75,8 @@
 
 ### F2.1 — Definição determinística
 
+**Implementada:** Lago sereno (SVG original CC0, 800×600), malha 4×6 seedada, contornos complementares com curvas Bézier amostradas, máscaras/hit areas reais no Pixi e 24 slots sem colisões fora do tapete e das sacolas. Ver imagem abre a referência. Enquadramento e limites da câmera ampliados para alcançar as peças. A malha suporta outras grades, mas esta distribuição e interface estão limitadas ao demo de 24 peças. Movimento e encaixes permanecem nas F2.2/F2.3.
+
 - Esquema PuzzleDefinition e gerador de peças com seed e bordas compatíveis.
 - Sprite com máscara real da peça, imagem correta e hit test.
 - Distribuição inicial de 24 peças por mesa grande, sem sobreposição total.

@@ -24,15 +24,15 @@ export function screenToWorld(point: Vec2, camera: Camera, viewport: Viewport): 
 }
 
 export function fitZoom(viewport: Viewport): number {
-  return Math.max(0.01, Math.min(viewport.width / (MAT.width * 1.5), viewport.height / (MAT.height * 1.5)));
+  return Math.max(0.01, Math.min(viewport.width / (WORLD.width * 0.9), viewport.height / (WORLD.height * 0.9)));
 }
 
 export function limitCamera(camera: Camera, viewport: Viewport): Camera {
   const base = fitZoom(viewport);
   return {
     center: {
-      x: Math.max(-MAT.width / 2, Math.min(MAT.width / 2, camera.center.x)),
-      y: Math.max(-MAT.height / 2, Math.min(MAT.height / 2, camera.center.y)),
+      x: Math.max(-WORLD.width / 2, Math.min(WORLD.width / 2, camera.center.x)),
+      y: Math.max(-WORLD.height / 2, Math.min(WORLD.height / 2, camera.center.y)),
     },
     zoom: Math.max(base * 0.5, Math.min(base * 4, camera.zoom)),
     angleRad: ((camera.angleRad % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2),

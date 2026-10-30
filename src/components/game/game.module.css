@@ -15,3 +15,12 @@
 .controls button:hover { background: #e3e8d9; }
 .controls button:disabled { cursor: wait; opacity: .5; }
 @media (max-height: 500px) { .bottom p { display: none; } .header { padding-block: 2px; } .bottom { padding-block: 5px; } }
+
+.reference { position: absolute; right: 16px; top: max(78px, calc(env(safe-area-inset-top) + 78px)); z-index: 1; max-width: min(240px, 75vw); padding: 0 12px; border-radius: 8px; background: #fffdf7; box-shadow: 0 3px 12px #35271926; font-size: 13px; }
+.reference summary { min-height: 44px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.reference summary::before { content: '+'; }
+.reference[open] summary::before { content: '−'; }
+.reference figure { margin: 0 0 12px; }
+.reference img { display: block; width: 100%; height: auto; border-radius: 4px; }
+.reference figcaption { padding-top: 6px; color: #5e665c; }
+@media (max-height: 500px) { .reference { top: 62px; max-width: 160px; } }

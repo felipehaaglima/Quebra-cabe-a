@@ -1,6 +1,6 @@
 # 04 — Motor do puzzle, geometria, câmera e encaixes
 
-**Objetivo:** regras determinísticas para qualquer renderizador. Este documento contém **contratos e exemplos orientadores**; são propostas, não módulos já instalados ou código executável do projeto.
+**Objetivo:** regras determinísticas para qualquer renderizador. Este documento contém **contratos e exemplos orientadores**; orientam a implementação incremental. Câmera, malha determinística e distribuição do demo de 24 peças já existem em `src/game/core`; grupos, snaps, recompensas e persistência continuam como propostas para próximas fases.
 
 ## 1. Espaços de coordenadas
 
