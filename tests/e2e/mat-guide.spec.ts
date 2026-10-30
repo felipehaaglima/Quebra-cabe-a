@@ -86,7 +86,7 @@ for (const definition of [DEMO, DEMO48]) test(`guia opcional com ${definition.ro
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.reload();
   await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
-  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-  await expect(progress).toHaveText(`0 de ${expected} encaixes · ${count} grupos`);
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(progress).toHaveText(`1 de ${expected} encaixes · ${count - 1} grupos`);
   expect(errors).toEqual([]);
 });

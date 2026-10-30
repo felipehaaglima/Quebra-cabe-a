@@ -124,3 +124,13 @@ it('preserva atalhos do navegador com modificadores', () => {
   }
   expect(input.camera).toEqual(before);
 });
+
+it('aplica a posição final do pointerup mesmo sem o último pointermove', () => {
+  const { canvas, input: old, pointer } = setup(); old.destroy();
+  const piece = { begin: vi.fn(() => true), move: vi.fn(), end: vi.fn(), rotate: vi.fn(() => false), nudge: vi.fn(() => false), select: vi.fn() };
+  const controller = new CameraController(canvas, { width: 800, height: 600 }, vi.fn(), piece); input = controller;
+  pointer('pointerdown', 1, 350, 300);
+  pointer('pointermove', 1, 370, 300);
+  pointer('pointerup', 1, 410, 300);
+  expect(piece.move.mock.calls.at(-1)?.[0]).toEqual({ x: 10 / controller.camera.zoom, y: 0 });
+});

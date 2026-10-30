@@ -1,4 +1,6 @@
 import { matGuideHint, releaseWithGuide, type MatGuideHint } from '../core/puzzle/mat-guide';
+import { boundBag, hitBag, initialBags, storePiece, type BagState } from '../core/puzzle/bags';
+import type { ModelSnapshot } from '../persistence/snapshot';
 import type { Vec2 } from '../core/camera/camera';
 import { hitPiece } from '../core/puzzle/manipulation';
 import { boundGroup, createPuzzleState, groupPlacements, puzzleProgress, rotateGroup, snapTolerance, type PieceGroup, type PuzzleState } from '../core/puzzle/groups';
@@ -13,13 +15,20 @@ export interface PieceInput {
   select(id: string | null): void;
   snap?(zoom: number): boolean;
 }
-export type GroupInfo = ReturnType<typeof puzzleProgress> & { selectedMembers: readonly string[]; guideEnabled: boolean; guideHint: MatGuideHint };
+export type GroupInfo = ReturnType<typeof puzzleProgress> & { selectedMembers: readonly string[]; guideEnabled: boolean; guideHint: MatGuideHint; bags: readonly BagState[]; hiddenIds: readonly string[]; bagPanelOpen: boolean; openBagId: string | null; dropBagId: string | null; notice: string; transient: boolean };
 
 export class PieceController implements PieceInput {
   placements: Placement[];
   state: PuzzleState;
   selectedId: string | null = null;
   guideEnabled = false;
+  bags = initialBags();
+  bagPanelOpen = false;
+  openBagId: string | null = null;
+  notice = '';
+  completedAt: string | null = null;
+  localCoinBalance = 0;
+  private bagDrag: { original: BagState; start: Vec2; moved: boolean } | null = null;
   private zoom = 1;
   private order: string[];
   private drag: { original: PieceGroup; start: Vec2; moved: boolean } | null = null;
@@ -29,15 +38,64 @@ export class PieceController implements PieceInput {
     this.placements = placements.map((placement) => ({ ...placement, center: { ...placement.center } }));
     this.order = placements.map((placement) => placement.pieceId);
   }
+  private hiddenIds() { return this.bags.flatMap((bag) => bag.pieceIds); }
   private selectedGroup() { return this.state.groups.find((group) => group.pieceIds.includes(this.selectedId ?? '')); }
   private publish() {
     const poses = new Map(this.state.groups.flatMap((group) => groupPlacements(group, this.definition)).map((placement) => [placement.pieceId, placement]));
     const previous = new Map(this.placements.map((placement) => [placement.pieceId, placement]));
     this.placements = this.order.map((id) => {
       const next = poses.get(id)!, old = previous.get(id)!;
-      return old.quarterTurn === next.quarterTurn && Math.hypot(old.center.x - next.center.x, old.center.y - next.center.y) < 1e-10 ? old : next;
+      return old && old.quarterTurn === next.quarterTurn && Math.hypot(old.center.x - next.center.x, old.center.y - next.center.y) < 1e-10 ? old : next;
     });
-    this.onChange(this.placements, this.selectedId, { ...puzzleProgress(this.state, this.definition), selectedMembers: this.selectedGroup()?.pieceIds ?? [], guideEnabled: this.guideEnabled, guideHint: matGuideHint(this.selectedGroup(), snapTolerance(this.zoom)) });
+    const progress = puzzleProgress(this.state, this.definition);
+    if (progress.completed && !this.completedAt) this.completedAt = new Date().toISOString();
+    const pose = this.placements.find((item) => item.pieceId === this.selectedId);
+    const drop = this.drag && pose ? hitBag(this.bags, pose.center) : undefined;
+    this.onChange(this.placements, this.selectedId, { ...puzzleProgress(this.state, this.definition), selectedMembers: this.selectedGroup()?.pieceIds ?? [], guideEnabled: this.guideEnabled, guideHint: matGuideHint(this.selectedGroup(), snapTolerance(this.zoom)), bags: this.bags, hiddenIds: this.hiddenIds(), bagPanelOpen: this.bagPanelOpen, openBagId: this.openBagId, dropBagId: drop?.id ?? this.bagDrag?.original.id ?? null, notice: this.notice, transient: !!this.drag || !!this.bagDrag });
+  }
+  refresh() { this.publish(); }
+  exportModel(): ModelSnapshot {
+    const state = this.drag ? { ...this.state, groups: this.state.groups.map((group) => group.id === this.drag!.original.id ? this.drag!.original : group) } : this.state;
+    const bags = this.bagDrag ? this.bags.map((bag) => bag.id === this.bagDrag!.original.id ? this.bagDrag!.original : bag) : this.bags;
+    return structuredClone({ state, bags, order: this.order, guideEnabled: this.guideEnabled, completedAt: this.completedAt, localCoinBalance: this.localCoinBalance });
+  }
+  restore(model: ModelSnapshot) {
+    this.state = structuredClone(model.state); this.bags = structuredClone(model.bags); this.order = [...model.order];
+    this.guideEnabled = model.guideEnabled; this.completedAt = model.completedAt; this.localCoinBalance = model.localCoinBalance;
+    this.selectedId = null; this.drag = null; this.bagDrag = null;
+  }
+  openBags(id = this.bags[0]?.id ?? null) { this.bagPanelOpen = true; this.openBagId = id; this.publish(); }
+  closeBags() { this.bagPanelOpen = false; this.publish(); }
+  createBag(label: string) {
+    label = label.trim().slice(0, 40);
+    if (!label || this.bags.length >= 16) { this.notice = 'Use um nome e no máximo 16 bolsas.'; this.publish(); return; }
+    let i = 1; while (this.bags.some((bag) => bag.id === `bag-${i}`)) i++;
+    const id = `bag-${i}`;
+    this.bags = [...this.bags, { id, label, center: { x: Math.min(900, (i - 3) * 180), y: 450 }, pieceIds: [] }];
+    this.notice = 'Bolsa criada.'; this.openBags(id);
+  }
+  renameBag(id: string, label: string) {
+    label = label.trim().slice(0, 40); if (!label) return;
+    this.bags = this.bags.map((bag) => bag.id === id ? { ...bag, label } : bag); this.publish();
+  }
+  moveBag(id: string, delta: Vec2) {
+    this.bags = this.bags.map((bag) => bag.id === id ? { ...bag, center: boundBag({ x: bag.center.x + delta.x, y: bag.center.y + delta.y }) } : bag); this.publish();
+  }
+  storeSelected(bagId: string): boolean {
+    if (!this.selectedId) return false;
+    const bags = storePiece(this.bags, this.state, this.selectedId, bagId);
+    if (!bags) { this.notice = 'Somente peças soltas podem ser guardadas.'; this.publish(); return false; }
+    this.bags = bags; this.selectedId = null; this.notice = 'Peça guardada.'; this.publish(); return true;
+  }
+  takePiece(bagId: string, pieceId: string) {
+    const bag = this.bags.find((item) => item.id === bagId && item.pieceIds.includes(pieceId));
+    const group = this.state.groups.find((item) => item.pieceIds.length === 1 && item.pieceIds[0] === pieceId);
+    if (!bag || !group) return;
+    this.bags = this.bags.map((item) => item.id === bagId ? { ...item, pieceIds: item.pieceIds.filter((id) => id !== pieceId) } : item);
+    const pose = groupPlacements(group, this.definition)[0];
+    this.selectedId = pieceId;
+    this.replace(boundGroup({ ...group, translation: { x: group.translation.x + bag.center.x + 170 - pose.center.x, y: group.translation.y + bag.center.y - pose.center.y } }, this.pieces, this.definition));
+    this.select(pieceId); this.notice = 'Peça retirada para a mesa.'; this.publish();
   }
   setGuideEnabled(enabled: boolean) { this.guideEnabled = enabled; this.publish(); }
   setViewZoom(zoom: number) {
@@ -50,42 +108,67 @@ export class PieceController implements PieceInput {
     this.publish();
   }
   private finishDrag(commit: boolean) {
+    const bagDrag = this.bagDrag; this.bagDrag = null;
+    if (bagDrag && !commit) { this.bags = this.bags.map((bag) => bag.id === bagDrag.original.id ? bagDrag.original : bag); this.publish(); }
     const drag = this.drag; this.drag = null;
     if (drag && !commit) this.replace(drag.original);
     return drag;
   }
   select(id: string | null) {
     this.finishDrag(false);
-    this.selectedId = this.placements.some((item) => item.pieceId === id) ? id : null;
+    this.notice = '';
+    this.selectedId = this.placements.some((item) => item.pieceId === id && !this.hiddenIds().includes(item.pieceId)) ? id : null;
     const members = new Set(this.selectedGroup()?.pieceIds ?? []);
     this.order = [...this.order.filter((item) => !members.has(item)), ...this.order.filter((item) => members.has(item))];
     this.publish();
   }
   begin(point: Vec2, hitSlop = 0): boolean {
-    const hit = hitPiece(point, this.pieces, this.placements, this.definition, hitSlop);
+    this.notice = '';
+    const hidden = new Set(this.hiddenIds());
+    const hit = hitPiece(point, this.pieces, this.placements.filter((item) => !hidden.has(item.pieceId)), this.definition, hitSlop);
     this.select(hit?.pieceId ?? null);
     const group = this.selectedGroup();
-    if (!group) return false;
+    if (!group) {
+      const bag = hitBag(this.bags, point, hitSlop);
+      if (!bag) return false;
+      this.bagDrag = { original: bag, start: point, moved: false }; return true;
+    }
     this.drag = { original: group, start: point, moved: false };
     return true;
   }
   move(point: Vec2) {
+    if (this.bagDrag) {
+      const { original, start } = this.bagDrag;
+      if (!this.bagDrag.moved && Math.hypot(point.x - start.x, point.y - start.y) * this.zoom < 6) return;
+      this.bagDrag.moved = true;
+      this.bags = this.bags.map((bag) => bag.id === original.id ? { ...bag, center: boundBag({ x: original.center.x + point.x - start.x, y: original.center.y + point.y - start.y }) } : bag);
+      this.publish(); return;
+    }
     if (!this.drag) return;
     const { original, start } = this.drag;
     this.drag.moved = true;
     this.replace(boundGroup({ ...original, translation: { x: original.translation.x + point.x - start.x, y: original.translation.y + point.y - start.y } }, this.pieces, this.definition));
   }
   end(commit: boolean, zoom = 1) {
+    const bagDrag = this.bagDrag;
     const drag = this.finishDrag(commit);
-    if (commit && drag?.moved) this.snap(zoom);
+    if (!commit) return;
+    if (bagDrag) { if (!bagDrag.moved) this.openBags(bagDrag.original.id); else this.publish(); return; }
+    const pose = this.placements.find((item) => item.pieceId === this.selectedId);
+    const bag = drag && pose ? hitBag(this.bags, pose.center) : undefined;
+    if (bag) { this.storeSelected(bag.id); return; }
+    if (drag && (drag.moved || this.guideEnabled) && this.snap(zoom)) return;
+    if (drag) this.publish();
   }
   snap(zoom = 1): boolean {
     this.finishDrag(true);
     const group = this.selectedGroup();
     if (!group) return false;
-    const next = releaseWithGuide(this.state, group.id, zoom, this.guideEnabled, this.pieces, this.definition);
-    if (next === this.state) return false;
-    this.state = next;
+    const hidden = new Set(this.hiddenIds());
+    const eligible = { ...this.state, groups: this.state.groups.filter((item) => !item.pieceIds.some((id) => hidden.has(id))) };
+    const next = releaseWithGuide(eligible, group.id, zoom, this.guideEnabled, this.pieces, this.definition);
+    if (next === eligible) return false;
+    this.state = { ...next, groups: [...this.state.groups.filter((item) => item.pieceIds.some((id) => hidden.has(id))), ...next.groups] };
     // The newly merged group is brought forward as one unit.
     this.select(this.selectedId);
     return true;

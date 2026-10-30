@@ -66,7 +66,8 @@ test('move e gira uma peça com câmera em quatro orientações, por mouse/toque
   await page.reload();
   await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
   await expect(selection).toHaveValue('');
-  await drag(page, point(first.center), point({ x: 0, y: 0 }), isMobile);
+  const restored = { x: position.x, y: position.y + 20 / centerCamera({ width: (await canvas.boundingBox())!.width, height: (await canvas.boundingBox())!.height }).zoom };
+  await drag(page, point(restored, 3 * Math.PI / 2), point({ x: 0, y: 0 }, 3 * Math.PI / 2), isMobile);
   await expect(selection).toHaveValue(first.pieceId);
   expect(errors).toEqual([]);
 });

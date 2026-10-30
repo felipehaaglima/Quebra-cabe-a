@@ -89,5 +89,5 @@ for (const definition of [DEMO, DEMO48]) test(`monta as ${definition.rows * defi
   expect(errors).toEqual([]);
   await page.reload();
   await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
-  await expect(page.getByLabel('Progresso do puzzle')).toHaveText(`0 de ${definition.rows * (definition.columns - 1) + definition.columns * (definition.rows - 1)} encaixes · ${count} grupos`);
+  await expect(page.getByLabel('Progresso do puzzle')).toContainText('Puzzle completo!');
 });

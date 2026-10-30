@@ -1,6 +1,6 @@
 # 04 — Motor do puzzle, geometria, câmera e encaixes
 
-**Objetivo:** regras determinísticas para qualquer renderizador. Este documento contém **contratos e exemplos orientadores**; orientam a implementação incremental. Câmera, malha, distribuição, grupos rígidos, snaps e conclusão do demo de 24 peças existem em `src/game/core`. Recompensas e persistência continuam para próximas fases. A implementação de grupos fica em `src/game/core/puzzle/groups.ts`: translation + rotate(canonicalCenter, quarterTurn), sem coordenadas de câmera no estado do puzzle.
+**Objetivo:** regras determinísticas para qualquer renderizador. Este documento contém **contratos e exemplos orientadores**; orientam a implementação incremental. Câmera, malha, distribuição, grupos rígidos, snaps e conclusão dos demos de 24/48 peças existem em `src/game/core`. Bolsas e persistência local foram acrescentadas nas F3.1/F3.2; recompensas ficam para a F4.2. A implementação de grupos fica em `src/game/core/puzzle/groups.ts`: translation + rotate(canonicalCenter, quarterTurn), sem coordenadas de câmera no estado do puzzle.
 
 ## 1. Espaços de coordenadas
 
@@ -268,3 +268,9 @@ type GameFeedbackEvent =
 - Soltar peça fora da mesa deve ser limitado/recuperável.
 - Mudar viewport/orientação não altera save canônico.
 - Monte 24/48/100 peças em testes sintéticos e verifique consistência dos grupos.
+
+## Soltura e bolsas (F3.1/F3.2)
+
+Antes de confirmar a soltura, o controlador aplica as coordenadas de pointerup em world space, cobrindo navegadores que omitem o último pointermove. Cancelamentos não aplicam essa posição. Com guia ligado, mesmo um toque/pequeno ajuste pode alinhar a seleção próxima e orientada a 0°.
+
+Bolsas associam IDs de peças soltas ao inventário, sem excluir sua geometria ou grupo canônico. Peças guardadas não participam do hit test nem dos candidatos de encaixe. Retirar remove a associação e posiciona a mesma peça ao lado da bolsa, respeitando os limites da mesa. O snapshot durante arraste usa a última transformação confirmada.

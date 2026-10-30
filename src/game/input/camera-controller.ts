@@ -62,7 +62,13 @@ export class CameraController {
       this.onChange(this.camera);
     };
     const end = (event: PointerEvent) => {
-      if (!pointers.delete(event.pointerId)) return;
+      if (!pointers.has(event.pointerId)) return;
+      // Touch browsers may coalesce the last move: pointerup is authoritative.
+      if (event.type === 'pointerup' && pieceActive && pointers.size === 1 && baseline) {
+        const final = localPoint(event);
+        if (pieceMoved || Math.hypot(final.x - baseline.points[0].x, final.y - baseline.points[0].y) > 0) this.pieceInput?.move(screenToWorld(final, this.camera, this.viewport));
+      }
+      pointers.delete(event.pointerId);
       if (pieceActive) {
         pieceActive = false;
         if (event.type === 'pointerup') this.pieceInput?.end(true, this.camera.zoom);
@@ -146,5 +152,11 @@ export class CameraController {
     this.onChange(this.camera);
   }
 
+  viewSnapshot() { return { center: { ...this.camera.center }, relativeZoom: this.camera.zoom / fitZoom(this.viewport), angleRad: this.camera.angleRad }; }
+  restoreView(view: { center: Vec2; relativeZoom: number; angleRad: number }) {
+    this.cancelGesture();
+    this.camera = limitCamera({ center: view.center, angleRad: view.angleRad, zoom: view.relativeZoom * fitZoom(this.viewport) }, this.viewport);
+    this.onChange(this.camera);
+  }
   destroy() { this.detach(); }
 }

@@ -15,23 +15,13 @@ Persistência no navegador via **IndexedDB (Dexie)**:
 - Implementar migrações **schemaVersion**; se falhar, preservar backup bruto e informar em vez de sobrescrever.
 - Modo privado, limpeza de dados do navegador e outros dispositivos podem eliminar o save local. Informar isso ao usuário.
 
-### Exemplo de contrato
+### Contrato implementado nas F3.1/F3.2
 
-~~~ts
-type LocalSaveV1 = {
-  schemaVersion: 1;
-  sessionId: string;
-  puzzleDefinitionId: string;
-  definitionVersion: number;
-  savedAt: string;
-  groups: Array<{ id: string; pieceIds: string[]; x: number; y: number; quarterTurn: 0 | 1 | 2 | 3 }>;
-  confirmedConnections: string[];
-  bags: Array<{ id: string; label: string; x: number; y: number; pieceIds: string[] }>;
-  camera: { x: number; y: number; zoom: number; angleRad: number };
-  localCoinBalance: number;
-  completedAt: string | null;
-};
-~~~
+O contrato executável está em `src/game/persistence/snapshot.ts`. O banco `quebra-cabeca-local` usa a tabela `saves`, chave `puzzleId`: uma montagem por definição de 24/48 peças. `definitionKey` identifica exatamente a definição/seed/asset. O snapshot v2 contém revisão, data, modelo (grupos, conexões, bolsas, ordem, guia, conclusão e saldo local reservado) e câmera (centro, zoom relativo e ângulo). Não há perfil ou sessão online.
+
+O leitor migra v1 para v2 adicionando os campos ausentes de preferência/conclusão/saldo. Antes de restaurar ou gravar, valida IDs únicos, inventário completo, grupos conexos, ledger de conexões canônicas, bolsas somente com peças soltas e limites da mesa. Versões futuras, dados corrompidos e definições diferentes são preservados sem sobrescrita. A revisão é conferida dentro da transação IndexedDB: outra aba que avançou o save bloqueia a gravação antiga.
+
+Ações confirmadas salvam imediatamente; câmera usa debounce de 700 ms. Durante arraste, o snapshot usa a última posição confirmada; pointercancel não vira progresso. `pagehide` e mudança de visibilidade tentam flush, sem garantir execução na interrupção abrupta do navegador. O status informa erros de armazenamento/conflito. Backup JSON exporta o último registro disponível, inclusive bruto incompatível; importação é futura. Limpeza de dados do navegador remove o save. Moedas continuam em zero até a F4.2.
 
 ## 2. Estratégia de evolução da nuvem
 

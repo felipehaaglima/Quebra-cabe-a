@@ -2,6 +2,9 @@ import { Application, Container, Graphics, Text, Texture, type Renderer } from '
 import { MAT, WORLD, type Camera, type Viewport } from '../core/camera/camera';
 
 import { DEMO, type PieceGeometry, type Placement, type PuzzleDefinition } from '../core/puzzle/puzzle';
+import { initialBags, type BagState } from '../core/puzzle/bags';
+import { createBagLayer } from './bags';
+export { updateBags } from './bags';
 import { createMatGuide } from './mat-guide';
 export { updateMatGuide } from './mat-guide';
 import { createPieceSprite } from './piece-sprite';
@@ -13,7 +16,7 @@ export async function loadDemoTexture(): Promise<Texture> {
   return Texture.from(image);
 }
 
-export function createWorld(texture: Texture, pieces: readonly PieceGeometry[], placements: readonly Placement[], definition: PuzzleDefinition = DEMO, renderer: Renderer) {
+export function createWorld(texture: Texture, pieces: readonly PieceGeometry[], placements: readonly Placement[], definition: PuzzleDefinition = DEMO, renderer: Renderer, bags: readonly BagState[] = initialBags()) {
   const world = new Container();
   const table = new Graphics().roundRect(-WORLD.width / 2, -WORLD.height / 2, WORLD.width, WORLD.height, 40).fill(0xd7b58e);
   // Procedural wood and fabric; no external media or random world state.
@@ -33,18 +36,10 @@ export function createWorld(texture: Texture, pieces: readonly PieceGeometry[], 
   const caption = new Text({ text: 'Seu espaço para montar', style: { fontFamily: 'Georgia, serif', fontSize: 27, fill: 0xe7ebdb, align: 'center' } });
   caption.label = 'mat-caption';
   caption.anchor.set(0.5); world.addChild(caption);
-  for (const [index, x] of [-560, 560].entries()) {
-    const bag = new Container();
-    bag.position.set(x, 270);
-    bag.rotation = index === 0 ? -0.12 : 0.1;
-    bag.addChild(new Graphics().roundRect(-68, -68, 136, 144, 18).fill(0xb98a5d)
-      .roundRect(-58, -75, 116, 24, 8).fill(0x946743)
-      .roundRect(-48, -18, 96, 48, 5).fill(0xf3e7ce));
-    const label = new Text({ text: index === 0 ? 'Bordas' : 'Cores', style: { fontFamily: 'Georgia, serif', fontSize: 20, fill: 0x604935 } });
-    label.anchor.set(0.5); label.y = 6; bag.addChild(label); world.addChild(bag);
-  }
+  world.addChild(createBagLayer(bags));
   const layer = new Container(); layer.label = 'pieces';
-  for (let index = 0; index < pieces.length; index++) layer.addChild(createPieceSprite(pieces[index], placements[index], definition, texture, renderer));
+  const poses = new Map(placements.map((pose) => [pose.pieceId, pose]));
+  for (const piece of pieces) layer.addChild(createPieceSprite(piece, poses.get(piece.id)!, definition, texture, renderer));
   world.addChild(layer);
   return world;
 }
@@ -60,13 +55,15 @@ export function drawScene(app: Application, world: Container, camera: Camera, vi
 
 const pieceNodeCache = new WeakMap<Container, Map<string, Container>>();
 
-export function updatePieces(world: Container, placements: readonly Placement[], selectedId: string | null, selectedMembers: readonly string[] = selectedId ? [selectedId] : []) {
+export function updatePieces(world: Container, placements: readonly Placement[], selectedId: string | null, selectedMembers: readonly string[] = selectedId ? [selectedId] : [], hiddenIds: readonly string[] = []) {
   const layer = world.getChildByLabel('pieces')!;
   let nodes = pieceNodeCache.get(layer);
   if (!nodes) { nodes = new Map(layer.children.map((node) => [node.label!, node])); pieceNodeCache.set(layer, nodes); }
   const selected = new Set(selectedMembers);
+  const hidden = new Set(hiddenIds);
   placements.forEach((placement, index) => {
     const node = nodes.get(`piece:${placement.pieceId}`)!;
+    node.visible = !hidden.has(placement.pieceId);
     node.position.set(placement.center.x, placement.center.y);
     node.rotation = placement.quarterTurn * Math.PI / 2;
     if (layer.children[index] !== node) layer.setChildIndex(node, index);

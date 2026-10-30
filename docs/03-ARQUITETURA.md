@@ -23,6 +23,8 @@ GitHub (main + branches/PRs)
 
 **Separação fundamental:** o motor deve funcionar sem PixiJS, DOM, React, Supabase ou Next.js. A cena é um adaptador visual para estado e comandos. Isso torna snapshots, multiplayer, replay e testes determinísticos viáveis.
 
+**Implementação atual (F3.2):** o estado de domínio fica em controladores TypeScript, com React para a interface. Zustand ainda não foi necessário. `src/game/persistence` isola Dexie e a validação/migração Zod; o motor puro não importa dependências de armazenamento.
+
 ## 2. Stack proposta
 
 | Camada | Tecnologia | Motivo |

@@ -125,3 +125,12 @@ A decisão revisada deve registrar motivo, impactos e plano de migração.
 - 3D fotorealista ou física completa.
 - Dados de progressão financeiros no navegador como fonte oficial após ativar contas.
 - Obrigatoriedade de usar Google Drive para jogar.
+
+## Bolsas e persistência local — F3.1/F3.2 (30/10/2026)
+
+- Escopo conjunto autorizado pelo usuário. Bolsas guardam somente peças soltas; o inventário continua no modelo canônico, com associação à bolsa e exclusão do hit test/snap enquanto guardadas.
+- Um save por definição/dificuldade, validado com Zod e revisão transacional. Dados incompatíveis e conflitos de outra aba bloqueiam sobrescrita; backup JSON permanece disponível. Não há sincronização de abas ou importação nesta fase.
+- Transformações são persistidas em world space; zoom da câmera é relativo ao enquadramento, preservando resize. Não persistir o estado intermediário de um gesto cancelável.
+- Pointerup fornece a posição final da peça antes do commit, mesmo se faltar pointermove. Correção coberta por regressão unitária e navegador touch/mouse; teste físico iOS/Android permanece pendente.
+
+Validação desta entrega: lint, typecheck, 107 testes unitários, build de produção e 40 testes Playwright passaram. Viewports: 390×844 com toque emulado e 1440×900 com mouse. Inclui bolsas em ambas as dificuldades, montagem completa e retomada, câmera/guia, soltura sem último movimento, cancelamentos, inventário integral, migração e conflito de revisão (unitários), save incompatível preservado e download de backup (navegador). Capturas em `test-results/` (não versionadas). Teste físico em Android/iOS e sincronização entre dispositivos continuam pendentes.

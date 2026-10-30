@@ -121,11 +121,13 @@
 - Preservar a montagem livre fora do tapete, os encaixes entre vizinhas e a movimentação rígida dos grupos. Posicionar no guia não gera recompensa duplicada.
 - Validar por toque/mouse com câmera girada, zoom e ambas as quantidades de peças.
 
-**Aceite:** ajuda descobrível e opcional; peças/grupos continuam livres para sair do tapete e não mudam de tamanho. Progresso e opção do guia ainda reiniciam ao sair/recarregar.
+**Aceite:** ajuda descobrível e opcional; peças/grupos continuam livres para sair do tapete e não mudam de tamanho. Progresso e opção do guia são persistidos pela F3.2.
 
 ## Fase 3 — Sacolas e salvamento
 
 ### F3.1 — Sacolas na mesa
+
+**Implementada:** bolsas com etiquetas, criação/renomeação, abertura e movimento por arraste ou botões. Peças soltas podem ser guardadas por arraste ou seleção e retiradas com identidade/geometria preservadas. Grupos são recusados e peças guardadas ficam fora do hit test e do snap.
 
 - Criar, nomear/renomear, mover e abrir sacolas com etiquetas.
 - Arrastar peças **soltas** para guardar; contar e mostrar conteúdo.
@@ -134,6 +136,10 @@
 **Aceite:** separar todas as peças em sacolas e trazê-las de volta; inventário consistente.
 
 ### F3.2 — Autosave local
+
+**Implementada junto à F3.1 por solicitação explícita:** IndexedDB/Dexie, validação Zod, snapshots v2 e migração v1, saves separados para 24/48 peças. Persiste grupos, conexões, bolsas, ordem, conclusão, saldo local reservado (zero), guia e câmera relativa ao viewport. Ações confirmadas gravam imediatamente; câmera usa debounce de 700 ms. Dados incompatíveis ou conflitos de revisão são preservados com aviso e backup exportável. Não inclui importação de backup, nuvem ou geração de moedas.
+
+**Correção do guia:** a soltura usa as coordenadas finais do ponteiro mesmo sem o último pointermove; pequenos movimentos/toques com guia ligado também tentam o ajuste. Cancelamentos continuam restaurando a posição original.
 
 - Dexie/IndexedDB, schemaVersion, snapshots, restores e migrações.
 - Salvar grupos, posições, sacolas, moedas locais, conclusão e preferências.

@@ -39,3 +39,21 @@
 .guideToggle[aria-pressed='true'] { background: #314d3c; color: #fffdf7; }
 .guideToggle:disabled { opacity: .5; cursor: wait; }
 .bottom .guideHint { display: block; min-height: 28px; margin: 0 auto 4px; font-size: 12px; line-height: 14px; color: #466039; }
+.bagsToggle { position: absolute; z-index: 2; top: 12px; left: 140px; min-height: 44px; padding: 8px 12px; border: 1px solid #c0c7b5; border-radius: 8px; background: #fffdf7; color: #293b31; font-size: 12px; cursor: pointer; }
+.saveStatus { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; font-size: 11px; line-height: 14px; margin-bottom: 4px; }
+.saveStatus span { max-width: 440px; }
+.saveStatus button, .bagDialog button, .bagDialog input, .bagDialog select { min-height: 44px; padding: 8px 10px; border: 1px solid #c0c7b5; border-radius: 8px; background: #fffdf7; color: #293b31; font-size: 13px; }
+.saveStatus button { flex-shrink: 0; font-size: 11px; }
+.bagDialog { width: min(540px, calc(100vw - 24px)); max-height: 82dvh; margin: auto; padding: 18px; border: 1px solid #c0c7b5; border-radius: 14px; background: #f5f1e8; color: #293b31; overflow: auto; }
+.bagDialog::backdrop { background: #293b3166; }
+.bagDialog header, .bagDialog form, .bagDialog nav, .bagActions { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin-bottom: 14px; }
+.bagDialog header { justify-content: space-between; align-items: center; }
+.bagDialog h2 { margin: 0; }
+.bagDialog label { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; font-size: 13px; max-width: 100%; }
+.bagDialog input, .bagDialog select { width: 100%; max-width: 280px; }
+.bagDialog p { font-size: 13px; line-height: 1.5; }
+.bagDialog button[aria-pressed='true'] { background: #314d3c; color: white; }
+.bagDialog button:disabled { opacity: .5; }
+.bagContents { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.bagContents button { display: flex; align-items: center; gap: 8px; }
+.bagThumb { display: inline-block; width: 36px; height: 40px; flex-shrink: 0; border-radius: 5px; background-repeat: no-repeat; }
