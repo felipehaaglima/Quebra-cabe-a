@@ -54,13 +54,13 @@ export function drawScene(app: Application, world: Container, camera: Camera, vi
 }
 
 
-export function updatePieces(world: Container, placements: readonly Placement[], selectedId: string | null) {
+export function updatePieces(world: Container, placements: readonly Placement[], selectedId: string | null, selectedMembers: readonly string[] = selectedId ? [selectedId] : []) {
   const layer = world.getChildByLabel('pieces')!;
   placements.forEach((placement, index) => {
     const node = layer.getChildByLabel(`piece:${placement.pieceId}`)!;
     node.position.set(placement.center.x, placement.center.y);
     node.rotation = placement.quarterTurn * Math.PI / 2;
     layer.setChildIndex(node, index);
-    node.getChildByLabel('selection')!.visible = placement.pieceId === selectedId;
+    node.getChildByLabel('selection')!.visible = selectedMembers.includes(placement.pieceId);
   });
 }

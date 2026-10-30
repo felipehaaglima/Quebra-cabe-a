@@ -1,6 +1,6 @@
 # 04 — Motor do puzzle, geometria, câmera e encaixes
 
-**Objetivo:** regras determinísticas para qualquer renderizador. Este documento contém **contratos e exemplos orientadores**; orientam a implementação incremental. Câmera, malha determinística e distribuição do demo de 24 peças já existem em `src/game/core`; grupos, snaps, recompensas e persistência continuam como propostas para próximas fases.
+**Objetivo:** regras determinísticas para qualquer renderizador. Este documento contém **contratos e exemplos orientadores**; orientam a implementação incremental. Câmera, malha, distribuição, grupos rígidos, snaps e conclusão do demo de 24 peças existem em `src/game/core`. Recompensas e persistência continuam para próximas fases. A implementação de grupos fica em `src/game/core/puzzle/groups.ts`: translation + rotate(canonicalCenter, quarterTurn), sem coordenadas de câmera no estado do puzzle.
 
 ## 1. Espaços de coordenadas
 
@@ -154,6 +154,10 @@ Para cada peça do grupo, sua posição final de referência no mundo depende de
 **Invariante:** toda peça está em exatamente um grupo; grupos não compartilham IDs; não destruir o grupo antigo sem mover membros para o novo grupo.
 
 ## 5. Detecção e resolução de snap
+
+**F2.3 implementada:** ao soltar após um drag válido, ou solicitar Encaixar/Enter, busca-se o grupo vizinho de menor erro com a mesma orientação. A tolerância é `clamp(18 / zoom, 6, 48)` em unidades de mundo. O grupo ativo adota exatamente a transformação do alvo; se a união extrapolar a mesa, ela é rejeitada. Uma ação une dois grupos e registra todas as conexões canônicas internas, incluindo ciclos, com IDs ordenados e únicos. Cancelamento, segundo dedo ou perda de foco não provocam snap. Setas com Shift ajustam a seleção em passos de 4 pixels de tela; as setas normais usam 20.
+
+Os passos abaixo preservam o desenho de referência para evolução do motor:
 
 Não usar "distância entre centros de sprites" como único critério: peças vizinhas podem ter centros distantes e grupos grandes precisam de correspondência exata.
 

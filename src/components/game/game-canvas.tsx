@@ -14,7 +14,8 @@ export default function GameCanvas() {
   const host = useRef<HTMLDivElement>(null);
   const controller = useRef<CameraController | null>(null);
   const pieceController = useRef<PieceController | null>(null);
-  const [selection, setSelection] = useState<{ id: string | null; quarterTurn: number }>({ id: null, quarterTurn: 0 });
+  const [selection, setSelection] = useState<{ id: string | null; quarterTurn: number; size: number }>({ id: null, quarterTurn: 0, size: 0 });
+  const [progress, setProgress] = useState({ connections: 0, expected: DEMO.rows * (DEMO.columns - 1) + DEMO.columns * (DEMO.rows - 1), groupCount: DEMO.rows * DEMO.columns, completed: false });
   const [status, setStatus] = useState('Preparando sua mesa…');
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -59,10 +60,12 @@ export default function GameCanvas() {
         canvas.setAttribute('aria-describedby', 'mesa-ajuda');
         element.appendChild(canvas);
         let viewport = { width: element.clientWidth, height: element.clientHeight };
-        const pieceInput = new PieceController(pieces, initialPlacements, DEMO, (placements, selectedId) => {
-          updatePieces(world, placements, selectedId);
+        const pieceInput = new PieceController(pieces, initialPlacements, DEMO, (placements, selectedId, info) => {
+          updatePieces(world, placements, selectedId, info.selectedMembers);
           app.render();
-          setSelection({ id: selectedId, quarterTurn: placements.find((item) => item.pieceId === selectedId)?.quarterTurn ?? 0 });
+          const quarterTurn = placements.find((item) => item.pieceId === selectedId)?.quarterTurn ?? 0;
+          setSelection((previous) => previous.id === selectedId && previous.quarterTurn === quarterTurn && previous.size === info.selectedMembers.length ? previous : { id: selectedId, quarterTurn, size: info.selectedMembers.length });
+          setProgress((previous) => previous.connections === info.connections && previous.groupCount === info.groupCount && previous.completed === info.completed ? previous : { connections: info.connections, expected: info.expected, groupCount: info.groupCount, completed: info.completed });
         });
         pieceController.current = pieceInput;
         input = new CameraController(canvas, viewport, (camera) => {
@@ -80,7 +83,7 @@ export default function GameCanvas() {
         observer.observe(element);
         drawScene(app, world, input.camera, viewport);
         dispose = release;
-        setReady(true); setStatus('24 peças prontas para mover e girar. Os encaixes chegam na próxima etapa.');
+        setReady(true); setStatus('24 peças prontas. Aproxime vizinhas na mesma orientação e solte para encaixar.');
       } catch (error) {
         release();
         throw error;
@@ -110,13 +113,14 @@ export default function GameCanvas() {
         <figure><Image src="/puzzles/demo/lago-sereno-v1.svg" width={240} height={180} alt="Referência do puzzle: lago verde entre montanhas, com árvores, sol e um barco à vela." unoptimized /><figcaption>Lago sereno · 24 peças</figcaption></figure>
       </details>
       <div className={styles.bottom}>
-        <p id="mesa-ajuda">Arraste uma peça para movê-la; arraste o fundo para navegar. Dois dedos ampliam e giram a mesa. Use Girar peça ou R; as setas movem a seleção e Escape desmarca. Encaixes e salvamento vêm depois.</p>
+        <p id="mesa-ajuda">Arraste uma peça para movê-la; arraste o fundo para navegar. Dois dedos ampliam e giram a mesa. Solte vizinhas alinhadas para encaixar. R gira a seleção; setas movem (Shift ajusta fino), Enter tenta encaixar e Escape desmarca. Progresso temporário: ainda não é salvo.</p>
+        <p className={styles.progress} role="status" aria-label="Progresso do puzzle">{progress.completed ? 'Puzzle completo! Você pode alinhar a obra ao tapete.' : `${progress.connections} de ${progress.expected} encaixes · ${progress.groupCount} grupos`}</p>
         <div className={styles.selection}>
           <select aria-label="Selecionar peça" disabled={!ready} value={selection.id ?? ''} onChange={(event) => pieceController.current?.select(event.target.value || null)}>
             <option value="">Selecionar peça</option>
             {PIECE_OPTIONS.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
-          <button disabled={!ready || !selection.id} onClick={() => pieceController.current?.rotate()}>Girar peça</button>
+          <button disabled={!ready || !selection.id} onClick={() => pieceController.current?.rotate()}>{selection.size > 1 ? 'Girar grupo' : 'Girar peça'}</button>
           <output aria-label="Orientação da peça">{selection.id ? `${selection.quarterTurn * 90}°` : '—'}</output>
         </div>
         <nav className={styles.controls} aria-label="Controles da mesa">
@@ -124,6 +128,8 @@ export default function GameCanvas() {
           <button disabled={!ready} onClick={() => act('zoom-in')} aria-label="Ampliar zoom">+</button>
           <button disabled={!ready} onClick={() => act('rotate')}>Girar 90°</button>
           <button disabled={!ready} onClick={() => act('center')}>Centralizar</button>
+          <button disabled={!ready || !selection.id} onClick={() => pieceController.current?.snap(controller.current?.camera.zoom ?? 1)}>Encaixar</button>
+          <button disabled={!progress.completed} onClick={() => pieceController.current?.alignCompleted()}>Alinhar obra</button>
         </nav>
       </div>
       <p className="sr-only" role="status">{ready ? status : ''}</p>

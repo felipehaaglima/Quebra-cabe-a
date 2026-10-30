@@ -111,7 +111,7 @@ it('arbitra peça/câmera, desfaz ao entrar segundo dedo e permite continuar o g
   expect(piece.end).toHaveBeenLastCalledWith(false);
   pointer('pointerdown', 4, 350, 300);
   pointer('pointerup', 4, 350, 300);
-  expect(piece.end).toHaveBeenLastCalledWith(true);
+  expect(piece.end).toHaveBeenLastCalledWith(true, controller.camera.zoom);
 });
 
 it('preserva atalhos do navegador com modificadores', () => {

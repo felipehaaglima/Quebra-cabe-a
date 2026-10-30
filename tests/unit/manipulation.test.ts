@@ -16,7 +16,8 @@ describe('seleção e movimento', () => {
     expect(input.begin({ x: first.center.x + 5, y: first.center.y + 3 })).toBe(true);
     input.move({ x: 105, y: 53 }); input.end(true);
     expect(input.placements.at(-1)?.pieceId).toBe(first.pieceId);
-    expect(input.placements.at(-1)?.center).toEqual({ x: 100, y: 50 });
+    expect(input.placements.at(-1)!.center.x).toBeCloseTo(100, 10);
+    expect(input.placements.at(-1)!.center.y).toBeCloseTo(50, 10);
     expect(input.placements.filter((item) => item.pieceId !== first.pieceId)).toEqual(initial.slice(1));
     expect(initial).toEqual(original);
     expect(new Set(input.placements.map((item) => item.pieceId)).size).toBe(24);
@@ -32,7 +33,8 @@ describe('seleção e movimento', () => {
     const input = makeInput();
     input.begin(initial[0].center); input.move({ x: 100, y: 50 });
     input.rotate(); input.end(false);
-    expect(input.placements.at(-1)?.center).toEqual({ x: 100, y: 50 });
+    expect(input.placements.at(-1)!.center.x).toBeCloseTo(100, 10);
+    expect(input.placements.at(-1)!.center.y).toBeCloseTo(50, 10);
     expect(input.placements.at(-1)?.quarterTurn).toBe((initial[0].quarterTurn + 1) % 4);
   });
   it('gira quatro vezes sem perder centro, membros ou forma', () => {

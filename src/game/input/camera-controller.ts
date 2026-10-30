@@ -65,7 +65,8 @@ export class CameraController {
       if (!pointers.delete(event.pointerId)) return;
       if (pieceActive) {
         pieceActive = false;
-        this.pieceInput?.end(event.type === 'pointerup');
+        if (event.type === 'pointerup') this.pieceInput?.end(true, this.camera.zoom);
+        else this.pieceInput?.end(false);
       }
       // Lifting a finger starts a fresh single-finger pan from this exact view.
       rebase();
@@ -83,11 +84,12 @@ export class CameraController {
     const visibility = () => { if (document.hidden) clear(); };
     const key = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.key === 'Enter' && this.pieceInput?.snap) { clear(); this.pieceInput.snap(this.camera.zoom); event.preventDefault(); return; }
       if (event.key === 'Escape') { clear(); this.pieceInput?.select(null); return; }
       if (event.key.toLowerCase() === 'r' && this.pieceInput?.rotate()) { event.preventDefault(); clear(); return; }
       const deltas: Record<string, Vec2> = { ArrowLeft: { x: -20, y: 0 }, ArrowRight: { x: 20, y: 0 }, ArrowUp: { x: 0, y: -20 }, ArrowDown: { x: 0, y: 20 } };
       const delta = deltas[event.key];
-      if (delta && this.pieceInput?.nudge(rotate({ x: delta.x / this.camera.zoom, y: delta.y / this.camera.zoom }, -this.camera.angleRad))) { event.preventDefault(); clear(); return; }
+      if (delta && this.pieceInput?.nudge(rotate({ x: delta.x * (event.shiftKey ? 0.2 : 1) / this.camera.zoom, y: delta.y * (event.shiftKey ? 0.2 : 1) / this.camera.zoom }, -this.camera.angleRad))) { event.preventDefault(); clear(); return; }
       const actions: Record<string, CameraAction> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', '+': 'zoom-in', '=': 'zoom-in', '-': 'zoom-out', r: 'rotate', Home: 'center' };
       const action = actions[event.key];
       if (action) { event.preventDefault(); this.act(action); }

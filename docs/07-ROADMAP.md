@@ -95,6 +95,8 @@
 
 ### F2.3 — Snap e grupos
 
+**Implementada:** grafo canônico de vizinhanças, orientação em quartos de volta, snap na soltura válida ou por botão/Enter e grupos rígidos que se movem/giram juntos. Cada conexão é registrada uma vez; fechar ciclos registra todas as arestas. Ao reunir as 24 peças e 38 conexões, a interface reconhece a conclusão e permite alinhar a obra ao tapete. Motor puro testado também com malhas de 48/100 peças; a interface segue no demo de 24. Não inclui moedas, áudio ou salvamento.
+
 - Gerar grafo canônico de vizinhanças, achar candidatos, validar orientação/posição e colar.
 - Grupos rígidos se movem e giram juntos.
 - Confirmar conexões únicas e condição final de puzzle completo.

@@ -20,13 +20,14 @@
 | ADR-012 | **Galeria pertence ao dono**, colaboradores são referenciados | Propriedade e participação são conceitos separados |
 | ADR-013 | **Vercel após o primeiro build funcional** | Evita deploy quebrado de um repo vazio |
 | ADR-014 | **Nenhum dinheiro real no MVP** | Mantém economia como sistema de progressão, sem pagamentos ou obrigações adicionais |
+| ADR-015 | Conclusão reconhecida ao unir todas as peças e conexões, com alinhamento ao tapete opcional | Permite montar em qualquer lugar; a ação Alinhar obra restaura posição e orientação do tapete sem alterar conexões |
 
 ## 2. Perguntas de produto abertas — não bloqueiam a Fase 0
 
 1. **Nome final e marca:** "Quebra-cabeça" é provisório; nome do repositório é Quebra-cabe-a.
 2. **Aparência das sacolas:** papel, tecido, caixas ou múltiplos cosméticos; regra funcional é maior prioridade.
 3. **Como girar peças:** quartos de volta com botão/tecla R no MVP; giro livre apenas se testes provarem que melhora, sem comprometer snap.
-4. **Conclusão e tapete:** uma vez todas as peças conectadas, centralizar automaticamente no tapete ou convidar o jogador a posicionar o grupo final? Playtest decide.
+4. **Conclusão e tapete:** F2.3 adota alinhamento opcional por botão após reconhecer a montagem (ADR-015); validar a experiência em playtest.
 5. **Quantas peças iniciais:** protótipo em 24; testar 48; 100+ em fases posteriores.
 6. **Preço e prêmio das moedas:** números ilustrativos, ajustar para valor percebido e dificuldade.
 7. **Moedas dos ajudantes:** progressão compartilhada, recompensa individual por contribuição ou somente ao dono? Decidir antes de multiplayer.

@@ -31,3 +31,6 @@
 .selection button:disabled { opacity: .5; cursor: default; }
 .selection output { width: 40px; font-size: 12px; font-variant-numeric: tabular-nums; }
 @media (max-height: 500px) { .selection { display: inline-flex; margin: 0 8px 0 0; } .controls { display: inline-flex; } .bottom { text-align: center; } }
+
+.bottom .progress { display: block; min-height: 36px; margin-bottom: 4px; color: #314d3c; font-weight: bold; }
+@media (max-height: 500px) { .bottom .progress { min-height: 18px; } }
