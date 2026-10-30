@@ -7,6 +7,7 @@ import { CameraController, type CameraAction } from '@/game/input/camera-control
 import { fitZoom } from '@/game/core/camera/camera';
 import styles from './game.module.css';
 import { DEMO, DEMO48, generatePieces, distributePieces } from '@/game/core/puzzle/puzzle';
+import type { MatGuideHint } from '@/game/core/puzzle/mat-guide';
 import { PieceController } from '@/game/input/piece-controller';
 export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
   const definition = count === 48 ? DEMO48 : DEMO;
@@ -16,6 +17,7 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
   const pieceController = useRef<PieceController | null>(null);
   const [selection, setSelection] = useState<{ id: string | null; quarterTurn: number; size: number }>({ id: null, quarterTurn: 0, size: 0 });
   const [progress, setProgress] = useState({ connections: 0, expected: definition.rows * (definition.columns - 1) + definition.columns * (definition.rows - 1), groupCount: definition.rows * definition.columns, completed: false });
+  const [guide, setGuide] = useState<{ enabled: boolean; hint: MatGuideHint }>({ enabled: false, hint: 'none' });
   const [status, setStatus] = useState('Preparando sua mesa…');
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -28,7 +30,7 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
     let dispose: (() => void) | undefined;
     async function init() {
       // Pixi is evaluated only in the browser, never in a Server Component.
-      const [{ Application }, { createWorld, drawScene, loadDemoTexture, updatePieces }] = await Promise.all([import('pixi.js'), import('@/game/renderer-pixi/scene')]);
+      const [{ Application }, { createWorld, drawScene, loadDemoTexture, updatePieces, updateMatGuide }] = await Promise.all([import('pixi.js'), import('@/game/renderer-pixi/scene')]);
       if (cancelled) return;
       const app = new Application();
       let texture: import('pixi.js').Texture | undefined;
@@ -62,6 +64,8 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
         let viewport = { width: element.clientWidth, height: element.clientHeight };
         const pieceInput = new PieceController(pieces, initialPlacements, definition, (placements, selectedId, info) => {
           updatePieces(world, placements, selectedId, info.selectedMembers);
+          updateMatGuide(world, pieces, definition, info.guideEnabled, info.selectedMembers, info.guideHint);
+          setGuide((previous) => previous.enabled === info.guideEnabled && previous.hint === info.guideHint ? previous : { enabled: info.guideEnabled, hint: info.guideHint });
           app.render();
           const quarterTurn = placements.find((item) => item.pieceId === selectedId)?.quarterTurn ?? 0;
           setSelection((previous) => previous.id === selectedId && previous.quarterTurn === quarterTurn && previous.size === info.selectedMembers.length ? previous : { id: selectedId, quarterTurn, size: info.selectedMembers.length });
@@ -69,9 +73,11 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
         });
         pieceController.current = pieceInput;
         input = new CameraController(canvas, viewport, (camera) => {
+          pieceInput.setViewZoom(camera.zoom);
           drawScene(app, world, camera, viewport);
           setView(`${Math.round(camera.zoom / fitZoom(viewport) * 100)}% · ${Math.round(camera.angleRad * 180 / Math.PI)}°`);
         }, pieceInput);
+        pieceInput.setViewZoom(input.camera.zoom);
         const activeInput = input;
         controller.current = input;
         observer = new ResizeObserver(() => {
@@ -106,6 +112,7 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
         <output className={styles.view} aria-label="Visão da mesa">{view}</output>
       </header>
       <div className={styles.stage} ref={host} data-testid="mesa">
+        <button className={styles.guideToggle} disabled={!ready} aria-pressed={guide.enabled} onClick={() => pieceController.current?.setGuideEnabled(!guide.enabled)}>Guia no tapete</button>
         {!ready && <div className={styles.loading}><p role={failed ? 'alert' : 'status'}>{status}</p>{failed && <button onClick={() => { setFailed(false); setStatus('Preparando sua mesa…'); setAttempt((value) => value + 1); }}>Tentar novamente</button>}</div>}
       </div>
       <details className={styles.reference}>
@@ -114,6 +121,13 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
       </details>
       <div className={styles.bottom}>
         <p id="mesa-ajuda">Arraste uma peça para movê-la; arraste o fundo para navegar. Dois dedos ampliam e giram a mesa. Solte vizinhas alinhadas para encaixar. R gira a seleção; setas movem (Shift ajusta fino), Enter tenta encaixar e Escape desmarca. Progresso temporário: ainda não é salvo.</p>
+        <p className={styles.guideHint} role="status" aria-label="Ajuda do tapete">{!guide.enabled ? 'Guia desligado: ative para ver a referência no tapete.' : {
+          none: 'Guia ligado: selecione uma peça ou grupo.',
+          'wrong-orientation': 'Gire a seleção para 0° para ajustar ao tapete.',
+          far: 'Siga os contornos no tapete e aproxime a seleção.',
+          near: 'Perto do lugar certo. Solte ou use Encaixar.',
+          aligned: 'Seleção alinhada. Você pode movê-la livremente.',
+        }[guide.hint]}</p>
         <p className={styles.progress} role="status" aria-label="Progresso do puzzle">{progress.completed ? 'Puzzle completo! Você pode alinhar a obra ao tapete.' : `${progress.connections} de ${progress.expected} encaixes · ${progress.groupCount} grupos`}</p>
         <div className={styles.selection}>
           <select aria-label="Selecionar peça" disabled={!ready} value={selection.id ?? ''} onChange={(event) => pieceController.current?.select(event.target.value || null)}>

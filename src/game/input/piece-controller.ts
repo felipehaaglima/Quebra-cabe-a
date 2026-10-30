@@ -1,6 +1,7 @@
+import { matGuideHint, releaseWithGuide, type MatGuideHint } from '../core/puzzle/mat-guide';
 import type { Vec2 } from '../core/camera/camera';
 import { hitPiece } from '../core/puzzle/manipulation';
-import { boundGroup, createPuzzleState, groupPlacements, puzzleProgress, rotateGroup, snapGroup, snapTolerance, type PieceGroup, type PuzzleState } from '../core/puzzle/groups';
+import { boundGroup, createPuzzleState, groupPlacements, puzzleProgress, rotateGroup, snapTolerance, type PieceGroup, type PuzzleState } from '../core/puzzle/groups';
 import type { PieceGeometry, Placement, PuzzleDefinition } from '../core/puzzle/puzzle';
 
 export interface PieceInput {
@@ -12,12 +13,14 @@ export interface PieceInput {
   select(id: string | null): void;
   snap?(zoom: number): boolean;
 }
-export type GroupInfo = ReturnType<typeof puzzleProgress> & { selectedMembers: readonly string[] };
+export type GroupInfo = ReturnType<typeof puzzleProgress> & { selectedMembers: readonly string[]; guideEnabled: boolean; guideHint: MatGuideHint };
 
 export class PieceController implements PieceInput {
   placements: Placement[];
   state: PuzzleState;
   selectedId: string | null = null;
+  guideEnabled = false;
+  private zoom = 1;
   private order: string[];
   private drag: { original: PieceGroup; start: Vec2; moved: boolean } | null = null;
 
@@ -34,7 +37,13 @@ export class PieceController implements PieceInput {
       const next = poses.get(id)!, old = previous.get(id)!;
       return old.quarterTurn === next.quarterTurn && Math.hypot(old.center.x - next.center.x, old.center.y - next.center.y) < 1e-10 ? old : next;
     });
-    this.onChange(this.placements, this.selectedId, { ...puzzleProgress(this.state, this.definition), selectedMembers: this.selectedGroup()?.pieceIds ?? [] });
+    this.onChange(this.placements, this.selectedId, { ...puzzleProgress(this.state, this.definition), selectedMembers: this.selectedGroup()?.pieceIds ?? [], guideEnabled: this.guideEnabled, guideHint: matGuideHint(this.selectedGroup(), snapTolerance(this.zoom)) });
+  }
+  setGuideEnabled(enabled: boolean) { this.guideEnabled = enabled; this.publish(); }
+  setViewZoom(zoom: number) {
+    const before = matGuideHint(this.selectedGroup(), snapTolerance(this.zoom));
+    this.zoom = zoom;
+    if (this.guideEnabled && before !== matGuideHint(this.selectedGroup(), snapTolerance(zoom))) this.publish();
   }
   private replace(group: PieceGroup) {
     this.state = { ...this.state, groups: this.state.groups.map((item) => item.id === group.id ? group : item) };
@@ -74,7 +83,7 @@ export class PieceController implements PieceInput {
     this.finishDrag(true);
     const group = this.selectedGroup();
     if (!group) return false;
-    const next = snapGroup(this.state, group.id, snapTolerance(zoom), this.pieces, this.definition);
+    const next = releaseWithGuide(this.state, group.id, zoom, this.guideEnabled, this.pieces, this.definition);
     if (next === this.state) return false;
     this.state = next;
     // The newly merged group is brought forward as one unit.

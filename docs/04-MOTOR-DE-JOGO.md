@@ -155,7 +155,7 @@ Para cada peça do grupo, sua posição final de referência no mundo depende de
 
 ## 5. Detecção e resolução de snap
 
-**F2.3 implementada:** ao soltar após um drag válido, ou solicitar Encaixar/Enter, busca-se o grupo vizinho de menor erro com a mesma orientação. A tolerância é `clamp(18 / zoom, 6, 48)` em unidades de mundo. O grupo ativo adota exatamente a transformação do alvo; se a união extrapolar a mesa, ela é rejeitada. Uma ação une dois grupos e registra todas as conexões canônicas internas, incluindo ciclos, com IDs ordenados e únicos. Cancelamento, segundo dedo ou perda de foco não provocam snap. Setas com Shift ajustam a seleção em passos de 4 pixels de tela; as setas normais usam 20.
+**F2.3 implementada:** ao soltar após um drag válido, ou solicitar Encaixar/Enter, busca-se o grupo vizinho de menor erro com a mesma orientação. A tolerância é `clamp(18 / zoom, 6, 48)` em unidades de mundo. O grupo ativo adota exatamente a transformação do alvo; se a união extrapolar a mesa, ela é rejeitada. O passo primário une dois grupos e registra todas as conexões canônicas internas, incluindo ciclos, com IDs ordenados e únicos. Cancelamento, segundo dedo ou perda de foco não provocam snap. Setas com Shift ajustam a seleção em passos de 4 pixels de tela; as setas normais usam 20.
 
 Os passos abaixo preservam o desenho de referência para evolução do motor:
 
@@ -200,7 +200,7 @@ A função é **ilustrativa**: tipos como SessionState e helpers pertencem à fu
 
 ## 6. Tapete e conclusão
 
-**Guia por peça planejado (F2.5):** as dimensões base já vêm da imagem/grade (24 peças: 800/6 × 600/4; 48 peças: 100 × 100), com abas além da célula. A ajuda futura mostrará referência proporcional no tapete e poderá ajustar uma peça/grupo que já esteja próximo da posição canônica correta. Será opcional e não alterará escala, geometria, conexões ou a montagem livre. Hoje só existem encaixes entre vizinhas e alinhamento da obra completa.
+**Guia por peça implementado (F2.5):** as dimensões base vêm da imagem/grade (24 peças: 800/6 × 600/4; 48 peças: 100 × 100), com abas além da célula. O botão opcional mostra imagem a 24% de opacidade e contornos canônicos no tapete. A seleção destaca seu destino, com aviso textual para posição distante, orientação incorreta, proximidade e alinhamento. No estado de domínio, somente um grupo a 0° e com `|translation| <= snapTolerance(zoom)` pode receber translation=(0,0) ao soltar ou pedir Encaixar. Não há alteração de escala nem bloqueio: o grupo pode sair livremente. Ativar/desativar ou cancelar o gesto não ajusta posições. O alinhamento isolado não cria conexões; após o ajuste, só vizinhos com a mesma transformação exata se unem. Uniões adicionais já alinhadas são resolvidas sem deslocamentos cumulativos e as conexões continuam únicas.
 
 - A área útil do tapete deve ter aspecto igual ao aspect ratio da imagem e dimensão worldUnits correspondente ao puzzle completo.
 - A montagem pode ocorrer fora do tapete; ao completar, dar ao jogador a opção de alinhar a obra ao tapete com animação suave. Se conclusão exigir estar sobre o tapete, comunicar isso claramente.

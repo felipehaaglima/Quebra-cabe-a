@@ -21,6 +21,7 @@
 | ADR-013 | **Vercel após o primeiro build funcional** | Evita deploy quebrado de um repo vazio |
 | ADR-014 | **Nenhum dinheiro real no MVP** | Mantém economia como sistema de progressão, sem pagamentos ou obrigações adicionais |
 | ADR-015 | Conclusão reconhecida ao unir todas as peças e conexões, com alinhamento ao tapete opcional | Permite montar em qualquer lugar; a ação Alinhar obra restaura posição e orientação do tapete sem alterar conexões |
+| ADR-016 | Guia opcional no tapete, sem travar ou redimensionar peças | Mostra a referência e ajusta grupos próximos a 0°; preservar montagem livre, cancelamento e conexões únicas |
 
 ## 2. Perguntas de produto abertas — não bloqueiam a Fase 0
 

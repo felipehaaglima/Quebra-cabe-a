@@ -21,4 +21,4 @@ Para repetir a coleta, execute o build e `npm run test:e2e -- --grep "escolhe 48
 
 ## Limites atuais
 
-O progresso permanece em memória e reinicia ao sair/recarregar. As sacolas são decorativas. O guia opcional por peça no tapete foi planejado como F2.5 e ainda não está ativo. Validar gestos, legibilidade e desempenho em Android e iOS reais permanece necessário.
+O progresso permanece em memória e reinicia ao sair/recarregar. As sacolas são decorativas. Este é um registro da F2.4, com guia desligado. Posteriormente a F2.5 implementou o guia opcional; estas medições não caracterizam seu custo quando ativo. Validar gestos, legibilidade e desempenho em Android e iOS reais permanece necessário.

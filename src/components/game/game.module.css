@@ -34,3 +34,8 @@
 
 .bottom .progress { display: block; min-height: 36px; margin-bottom: 4px; color: #314d3c; font-weight: bold; }
 @media (max-height: 500px) { .bottom .progress { min-height: 18px; } }
+
+.guideToggle { position: absolute; z-index: 2; top: 12px; left: 12px; min-height: 44px; max-width: 120px; padding: 8px; border: 1px solid #c0c7b5; border-radius: 8px; background: #fffdf7; color: #293b31; font-size: 12px; cursor: pointer; }
+.guideToggle[aria-pressed='true'] { background: #314d3c; color: #fffdf7; }
+.guideToggle:disabled { opacity: .5; cursor: wait; }
+.bottom .guideHint { display: block; min-height: 28px; margin: 0 auto 4px; font-size: 12px; line-height: 14px; color: #466039; }
