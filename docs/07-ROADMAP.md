@@ -105,10 +105,23 @@
 
 ### F2.4 — 48 peças e dificuldade
 
+**Implementada:** escolha de 24/48 peças antes de iniciar, nova malha 6×8 e distribuição determinística de 48 peças sem colisões com tapete/sacolas. Ver seleção amplia a peça escolhida; toque permite proximidade do contorno sem alterar o hit test exato do mouse. Renderer reutiliza nós indexados, evita reordenação desnecessária e gera texturas compactas dos recortes uma vez, com mipmaps para zoom reduzido e liberação ao sair. Métricas do Chromium são evidência do ambiente de testes; performance/gestos em Android/iOS reais seguem pendentes.
+
 - Testar malha 48 peças e desempenho mobile.
 - Ajustar threshold de snap, disposição inicial e hit area conforme playtest.
 
 **Aceite:** montagem jogável sem zoom/movimentos impossíveis.
+
+### F2.5 — Guia opcional no tapete (planejada)
+
+Solicitação de produto: ajudar a pessoa a posicionar uma peça com mais precisão no tapete, respeitando o tamanho base dela.
+
+- Oferecer um guia que possa ser ligado/desligado: imagem fantasma e/ou contornos proporcionais ao puzzle, sem mudar a escala das peças.
+- Indicar quando a peça ou grupo estiver perto de sua posição e orientação corretas no tapete; ajustar à posição exata apenas nessa proximidade, sem colocar peças em posições erradas.
+- Preservar a montagem livre fora do tapete, os encaixes entre vizinhas e a movimentação rígida dos grupos. Posicionar no guia não gera recompensa duplicada.
+- Validar por toque/mouse com câmera girada, zoom e ambas as quantidades de peças.
+
+**Aceite futuro:** a ajuda é descobrível e opcional; peças/grupos continuam livres para sair do tapete e não mudam de tamanho. **Esta assistência ainda não está implementada.**
 
 ## Fase 3 — Sacolas e salvamento
 

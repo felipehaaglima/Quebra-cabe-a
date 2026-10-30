@@ -6,12 +6,29 @@ export function pieceLocalPoint(point: Vec2, placement: Placement, definition: P
   return { x: local.x + definition.imageWidth / definition.columns / 2, y: local.y + definition.imageHeight / definition.rows / 2 };
 }
 
-export function hitPiece(point: Vec2, pieces: readonly PieceGeometry[], placements: readonly Placement[], definition: PuzzleDefinition): Placement | undefined {
+export function hitPiece(point: Vec2, pieces: readonly PieceGeometry[], placements: readonly Placement[], definition: PuzzleDefinition, slop = 0): Placement | undefined {
   const shapes = new Map(pieces.map((piece) => [piece.id, piece]));
-  return [...placements].reverse().find((placement) => {
+  const ordered = [...placements].reverse();
+  const exact = ordered.find((placement) => {
     const shape = shapes.get(placement.pieceId);
     return shape && pointInPolygon(pieceLocalPoint(point, placement, definition), shape.polygon);
   });
+  if (exact || slop <= 0) return exact;
+  let nearest: Placement | undefined;
+  let best = slop * slop;
+  for (const placement of ordered) {
+    const polygon = shapes.get(placement.pieceId)?.polygon;
+    if (!polygon) continue;
+    const pointLocal = pieceLocalPoint(point, placement, definition);
+    for (let i = 0; i < polygon.length; i++) {
+      const a = polygon[i], b = polygon[(i + 1) % polygon.length];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const t = Math.max(0, Math.min(1, ((pointLocal.x - a.x) * dx + (pointLocal.y - a.y) * dy) / (dx * dx + dy * dy || 1)));
+      const distance = (pointLocal.x - a.x - t * dx) ** 2 + (pointLocal.y - a.y - t * dy) ** 2;
+      if (distance < best) { best = distance; nearest = placement; }
+    }
+  }
+  return nearest;
 }
 
 // Clamp the entire rotated contour, not just the center, to the logical table.

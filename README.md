@@ -1,6 +1,6 @@
 # Quebra-cabeça — jogo cozy, mobile-first
 
-> **Status em 30/10/2026:** Fase 2.3 implementada: mesa navegável com 24 peças recortadas do puzzle Lago sereno. **Puzzle de 24 peças montável com encaixes e grupos; o salvamento ainda não está implementado.**
+> **Status em 30/10/2026:** Fase 2.4 implementada: mesa navegável com escolha de 24 ou 48 peças recortadas do puzzle Lago sereno. **Puzzle de 24/48 peças montável com encaixes e grupos; o salvamento ainda não está implementado.**
 
 Um jogo web de montar quebra-cabeças em uma mesa virtual acolhedora. O jogador navega por uma mesa grande, movimenta e gira peças, usa um tapete de montagem, organiza peças em sacolas etiquetadas, ganha moedas por progresso legítimo e desbloqueia novos puzzles. A experiência deve funcionar primeiro no celular e se adaptar elegantemente ao desktop.
 
@@ -26,6 +26,7 @@ Um jogo web de montar quebra-cabeças em uma mesa virtual acolhedora. O jogador 
 | [Multiplayer, Drive e IA](docs/06-INTEGRACOES.md) | Colaboração até 4, IA de imagens, Google Drive, privacidade |
 | [Roadmap e entregas](docs/07-ROADMAP.md) | Fases implementáveis, prioridades, critérios de pronto |
 | [Decisões e riscos](docs/08-DECISOES.md) | Hipóteses, trade-offs, orçamento e decisões em aberto |
+| [Validação de 48 peças](docs/09-VALIDACAO-48-PECAS.md) | Testes executados, métricas do Chromium e limitações de desempenho |
 | [Orientações para agentes](AGENTS.md) | Regras para Codex/assistentes que implementarem o projeto |
 
 ## Stack e arquitetura
@@ -63,11 +64,11 @@ npm ci
 npm run dev
 ```
 
-Abra a porta 3000 no seu ambiente local. O botão **Iniciar** abre `/play`, com uma mesa navegável em PixiJS v8. Arraste uma peça ou grupo com um dedo ou mouse para movê-lo; arraste uma área vazia para mover a visão. Com dois dedos, mova, faça pinça para zoom e gire a mesa ao redor do ponto entre os dedos. A roda do mouse amplia no cursor. Os botões oferecem zoom, giro de 90° e centralização como alternativa. Ao focar o canvas, as setas movem a peça selecionada (ou a visão se não houver seleção), +/− ampliam/reduzem, R gira a peça selecionada (ou a mesa), Escape desmarca e Home centraliza. A lista **Selecionar peça** e o botão **Girar peça** oferecem alternativas por teclado/toque.
+Abra a porta 3000 no seu ambiente local. Na abertura, escolha **24 peças · tranquilo** ou **48 peças · mais desafiador**. O botão **Iniciar** abre `/play` (24) ou `/play?pieces=48` (48), com uma mesa navegável em PixiJS v8. Arraste uma peça ou grupo com um dedo ou mouse para movê-lo; arraste uma área vazia para mover a visão. Com dois dedos, mova, faça pinça para zoom e gire a mesa ao redor do ponto entre os dedos. A roda do mouse amplia no cursor. Os botões oferecem zoom, giro de 90° e centralização como alternativa. Ao focar o canvas, as setas movem a peça selecionada (ou a visão se não houver seleção), +/− ampliam/reduzem, R gira a peça selecionada (ou a mesa), Escape desmarca e Home centraliza. A lista **Selecionar peça** e o botão **Girar peça** oferecem alternativas por teclado/toque. **Ver seleção** aproxima a peça escolhida, útil para as peças menores no modo 48. O toque admite pequena proximidade do contorno; o mouse mantém o contorno exato.
 
-A mesa, o feltro 4:3 e as sacolas decorativas são desenhados proceduralmente. As 24 peças usam uma ilustração vetorial original 800×600, [Lago sereno](public/puzzles/demo/lago-sereno-v1.svg), dedicada a CC0 com [licença registrada](public/puzzles/demo/LICENSE.md). **Ver imagem** abre a referência.
+A mesa, o feltro 4:3 e as sacolas decorativas são desenhados proceduralmente. Ambas as malhas usam uma ilustração vetorial original 800×600, [Lago sereno](public/puzzles/demo/lago-sereno-v1.svg), dedicada a CC0 com [licença registrada](public/puzzles/demo/LICENSE.md). **Ver imagem** abre a referência.
 
-O grupo selecionado ganha contorno dourado e vem para a frente. Solte peças vizinhas com orientação igual perto da posição correta para encaixar. O botão **Encaixar** ou Enter também tenta unir a seleção; Shift+setas faz ajustes finos. O contador mostra os 38 encaixes únicos e os grupos restantes. O contorno inteiro do grupo fica limitado à mesa. Cancelar um arraste, perder foco, redimensionar a tela ou iniciar um gesto com dois dedos desfaz o movimento em andamento; girar com R confirma a posição atual. Ao reunir todas as peças, a conclusão é reconhecida onde estiver a obra, sem exigir o tapete; **Alinhar obra** posiciona a montagem no tapete na orientação original. Movimentos e giros posteriores preservam as conexões. Áudio, moedas e persistência ainda não estão implementados.
+O grupo selecionado ganha contorno dourado e vem para a frente. Solte peças vizinhas com orientação igual perto da posição correta para encaixar. O botão **Encaixar** ou Enter também tenta unir a seleção; Shift+setas faz ajustes finos. O contador mostra os encaixes únicos (38 em 24 peças; 82 em 48) e os grupos restantes. O contorno inteiro do grupo fica limitado à mesa. Cancelar um arraste, perder foco, redimensionar a tela ou iniciar um gesto com dois dedos desfaz o movimento em andamento; girar com R confirma a posição atual. Ao reunir todas as peças, a conclusão é reconhecida onde estiver a obra, sem exigir o tapete; **Alinhar obra** posiciona a montagem no tapete na orientação original. Movimentos e giros posteriores preservam as conexões. Áudio, moedas e persistência ainda não estão implementados.
 
 A câmera é temporária: recarregar ou sair da mesa restaura a visão inicial. O enquadramento inicial mostra as peças ao redor do tapete; o pan alcança toda a mesa. Recortes e posições iniciais são reproduzíveis pela seed, sem novo sorteio ao recarregar. **Movimentos desta etapa são temporários e voltam à distribuição inicial ao recarregar ou sair.** É necessário WebGL disponível no navegador; falhas de inicialização mostram uma mensagem com opção de tentar novamente.
 
@@ -90,7 +91,7 @@ A rota fica em `src/app`; a landing, em `src/components/landing`; a interface da
 
 ## Próximos passos
 
-A Fase 0.2 conecta a Vercel após o primeiro build validado e prepara assets licenciados. A Fase 1.1 entrega o canvas, mesa e câmera; a Fase 1.2 acrescenta pinça, rotação por gesto e roda do mouse. A Fase 2.1 entrega a definição determinística, recortes e distribuição inicial de 24 peças. A Fase 2.2 acrescenta seleção, arraste e giro das peças, preservando a navegação da câmera. A Fase 2.3 acrescenta encaixes, grupos rígidos e conclusão do puzzle de 24 peças. O próximo passo do roadmap é a Fase 2.4: 48 peças, dificuldade e avaliação de desempenho mobile. Testes em dispositivos reais de iOS/Android continuam necessários quando houver gestos e canvas.
+A Fase 0.2 conecta a Vercel após o primeiro build validado e prepara assets licenciados. A Fase 1.1 entrega o canvas, mesa e câmera; a Fase 1.2 acrescenta pinça, rotação por gesto e roda do mouse. A Fase 2.1 entrega a definição determinística, recortes e distribuição inicial de 24 peças. A Fase 2.2 acrescenta seleção, arraste e giro das peças, preservando a navegação da câmera. A Fase 2.3 acrescenta encaixes, grupos rígidos e conclusão do puzzle de 24 peças. A Fase 2.4 acrescenta escolha de 24/48 peças, aproximação da seleção e ajustes de toque/renderização. Foi planejada a Fase 2.5: guia opcional para posicionar peças no tapete; **essa ajuda ainda não existe no app**. Depois vêm sacolas funcionais e salvamento. Testes em dispositivos reais de iOS/Android continuam necessários quando houver gestos e canvas.
 
 ## Organização de entregas
 

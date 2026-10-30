@@ -12,6 +12,7 @@ export type PieceGeometry = {
 };
 export type Placement = { pieceId: string; center: Vec2; quarterTurn: 0 | 1 | 2 | 3 };
 export const DEMO: PuzzleDefinition = Object.freeze({ id: 'lago-sereno-24-v1', version: 1, sourceImageId: 'lago-sereno-v1', imageWidth: 800, imageHeight: 600, rows: 4, columns: 6, seed: 'lago-sereno-24-v1', geometryVersion: 1, pieceRotation: 'quarter-turns' });
+export const DEMO48: PuzzleDefinition = Object.freeze({ ...DEMO, id: 'lago-sereno-48-v1', rows: 6, columns: 8, seed: 'lago-sereno-48-v1' });
 
 export function seededRandom(seed: string): () => number {
   let state = 2166136261;
@@ -78,14 +79,28 @@ export function pointInPolygon(point: Vec2, polygon: readonly Vec2[]): boolean {
   return inside;
 }
 
-// F2.1 uses 24 disjoint perimeter slots, safely outside the mat and bags.
+// Preserve the versioned 24-piece layout; 48 uses a denser, reserved-area grid.
 export function distributePieces(pieces: readonly PieceGeometry[], seed: string): Placement[] {
-  if (pieces.length !== 24) throw new Error('A distribuição desta versão requer 24 peças');
+  if (pieces.length !== 24 && pieces.length !== 48) throw new Error('A distribuição suporta 24 ou 48 peças');
   if (pieces.some((piece) => piece.polygon.some((point) => Math.abs(point.x - piece.edges.right.points[0].x / 2) > 110 || Math.abs(point.y - piece.edges.bottom.points[0].y / 2) > 110))) throw new Error('Peças grandes demais para os slots desta versão');
+  const maxRadius = pieces.length === 48 ? 74 : 110;
+  if (pieces.some((piece) => piece.polygon.some((point) => Math.abs(point.x - piece.edges.right.points[0].x / 2) > maxRadius || Math.abs(point.y - piece.edges.bottom.points[0].y / 2) > maxRadius))) throw new Error('Peças grandes demais para os slots desta versão');
   const random = seededRandom(`${seed}:layout:v1`);
   const slots: Vec2[] = [];
-  for (const y of [-620, 620]) for (let i = 0; i < 8; i++) slots.push({ x: -840 + i * 240, y });
-  for (const x of [-900, 900]) for (let i = 0; i < 4; i++) slots.push({ x, y: -360 + i * 240 });
+  if (pieces.length === 24) {
+    for (const y of [-620, 620]) for (let i = 0; i < 8; i++) slots.push({ x: -840 + i * 240, y });
+    for (const x of [-900, 900]) for (let i = 0; i < 4; i++) slots.push({ x, y: -360 + i * 240 });
+  } else {
+    const reserved = [
+      { left: -424, right: 424, top: -324, bottom: 324 },
+      { left: -650, right: -470, top: 170, bottom: 370 },
+      { left: 470, right: 650, top: 170, bottom: 370 },
+    ];
+    // 80 accounts for the rotated contour and seeded jitter, not just the cell.
+    for (let y = -640; y <= 640; y += 160) for (let x = -960; x <= 960; x += 160) {
+      if (reserved.every((box) => x + 80 < box.left || x - 80 > box.right || y + 80 < box.top || y - 80 > box.bottom)) slots.push({ x, y });
+    }
+  }
   for (let i = slots.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [slots[i], slots[j]] = [slots[j], slots[i]];

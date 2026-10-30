@@ -8,3 +8,11 @@ it('oferece uma entrada real para a mesa e informa o estágio das peças', () =>
   expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/play');
   expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAccessibleDescription(/Peças e encaixes em desenvolvimento/);
 });
+
+it('permite escolher 48 peças antes de iniciar', async () => {
+  const { default: userEvent } = await import('@testing-library/user-event');
+  const user = userEvent.setup();
+  render(<Welcome />);
+  await user.selectOptions(screen.getByLabelText('Número de peças'), '48');
+  expect(screen.getByRole('link', { name: 'Iniciar' })).toHaveAttribute('href', '/play?pieces=48');
+});

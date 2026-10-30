@@ -1,7 +1,7 @@
-import { Application, Container, Graphics, Text, Texture } from 'pixi.js';
+import { Application, Container, Graphics, Text, Texture, type Renderer } from 'pixi.js';
 import { MAT, WORLD, type Camera, type Viewport } from '../core/camera/camera';
 
-import { DEMO, type PieceGeometry, type Placement } from '../core/puzzle/puzzle';
+import { DEMO, type PieceGeometry, type Placement, type PuzzleDefinition } from '../core/puzzle/puzzle';
 import { createPieceSprite } from './piece-sprite';
 
 export async function loadDemoTexture(): Promise<Texture> {
@@ -11,7 +11,7 @@ export async function loadDemoTexture(): Promise<Texture> {
   return Texture.from(image);
 }
 
-export function createWorld(texture: Texture, pieces: readonly PieceGeometry[], placements: readonly Placement[]) {
+export function createWorld(texture: Texture, pieces: readonly PieceGeometry[], placements: readonly Placement[], definition: PuzzleDefinition = DEMO, renderer: Renderer) {
   const world = new Container();
   const table = new Graphics().roundRect(-WORLD.width / 2, -WORLD.height / 2, WORLD.width, WORLD.height, 40).fill(0xd7b58e);
   // Procedural wood and fabric; no external media or random world state.
@@ -40,7 +40,7 @@ export function createWorld(texture: Texture, pieces: readonly PieceGeometry[], 
     label.anchor.set(0.5); label.y = 6; bag.addChild(label); world.addChild(bag);
   }
   const layer = new Container(); layer.label = 'pieces';
-  for (let index = 0; index < pieces.length; index++) layer.addChild(createPieceSprite(pieces[index], placements[index], DEMO, texture));
+  for (let index = 0; index < pieces.length; index++) layer.addChild(createPieceSprite(pieces[index], placements[index], definition, texture, renderer));
   world.addChild(layer);
   return world;
 }
@@ -54,13 +54,18 @@ export function drawScene(app: Application, world: Container, camera: Camera, vi
 }
 
 
+const pieceNodeCache = new WeakMap<Container, Map<string, Container>>();
+
 export function updatePieces(world: Container, placements: readonly Placement[], selectedId: string | null, selectedMembers: readonly string[] = selectedId ? [selectedId] : []) {
   const layer = world.getChildByLabel('pieces')!;
+  let nodes = pieceNodeCache.get(layer);
+  if (!nodes) { nodes = new Map(layer.children.map((node) => [node.label!, node])); pieceNodeCache.set(layer, nodes); }
+  const selected = new Set(selectedMembers);
   placements.forEach((placement, index) => {
-    const node = layer.getChildByLabel(`piece:${placement.pieceId}`)!;
+    const node = nodes.get(`piece:${placement.pieceId}`)!;
     node.position.set(placement.center.x, placement.center.y);
     node.rotation = placement.quarterTurn * Math.PI / 2;
-    layer.setChildIndex(node, index);
-    node.getChildByLabel('selection')!.visible = selectedMembers.includes(placement.pieceId);
+    if (layer.children[index] !== node) layer.setChildIndex(node, index);
+    node.getChildByLabel('selection')!.visible = selected.has(placement.pieceId);
   });
 }

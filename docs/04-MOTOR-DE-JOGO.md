@@ -200,6 +200,8 @@ A função é **ilustrativa**: tipos como SessionState e helpers pertencem à fu
 
 ## 6. Tapete e conclusão
 
+**Guia por peça planejado (F2.5):** as dimensões base já vêm da imagem/grade (24 peças: 800/6 × 600/4; 48 peças: 100 × 100), com abas além da célula. A ajuda futura mostrará referência proporcional no tapete e poderá ajustar uma peça/grupo que já esteja próximo da posição canônica correta. Será opcional e não alterará escala, geometria, conexões ou a montagem livre. Hoje só existem encaixes entre vizinhas e alinhamento da obra completa.
+
 - A área útil do tapete deve ter aspecto igual ao aspect ratio da imagem e dimensão worldUnits correspondente ao puzzle completo.
 - A montagem pode ocorrer fora do tapete; ao completar, dar ao jogador a opção de alinhar a obra ao tapete com animação suave. Se conclusão exigir estar sobre o tapete, comunicar isso claramente.
 - Não reamostrar imagem ou mudar escala de peças arbitrariamente para "fazer caber". O tamanho esperado do puzzle e o tapete são derivados da mesma definição.

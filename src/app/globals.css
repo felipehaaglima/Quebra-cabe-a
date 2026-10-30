@@ -40,3 +40,6 @@ h2 { font: normal 23px Georgia, serif; margin: 10px 0; }
 footer { color: var(--muted); font-size: 11px; line-height: 1.8; }
 @media (min-width: 640px) { .version { display: block; } .features { grid-template-columns: repeat(3, 1fr); gap: 30px; } }
 @media (min-width: 900px) { .hero { grid-template-columns: 1fr 1fr; align-items: center; gap: 60px; padding: 50px 0 64px; } .illustration { min-height: 490px; } }
+
+.puzzle-choice { display: flex; flex-direction: column; gap: 8px; max-width: 280px; margin: 0 0 18px; color: var(--muted); font-size: 13px; }
+.puzzle-choice select { min-height: 44px; padding: 10px 12px; border: 1px solid #c0c7b5; border-radius: 8px; background: #fffdf7; color: var(--ink); font-size: 14px; }

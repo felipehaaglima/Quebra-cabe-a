@@ -72,7 +72,7 @@ describe('distribuição inicial', () => {
   it('usa a escala do tapete e rejeita layouts ainda não suportados', () => {
     expect(DEMO.imageWidth).toBe(MAT.width);
     expect(DEMO.imageHeight).toBe(MAT.height);
-    expect(() => distributePieces(generatePieces({ ...DEMO, rows: 6, columns: 8 }), DEMO.seed)).toThrow('24 peças');
+    expect(() => distributePieces(generatePieces({ ...DEMO, rows: 10, columns: 10 }), DEMO.seed)).toThrow('24 ou 48');
     expect(() => distributePieces(generatePieces({ ...DEMO, imageWidth: 1600, imageHeight: 1200 }), DEMO.seed)).toThrow('grandes demais');
   });
   for (const seed of [DEMO.seed, 'mesa-2', 'mesa-3']) {

@@ -37,7 +37,7 @@ export class CameraController {
       canvas.setPointerCapture(event.pointerId);
       pointers.set(event.pointerId, localPoint(event));
       pieceMoved = false;
-      if (pointers.size === 1) pieceActive = this.pieceInput?.begin(screenToWorld(localPoint(event), this.camera, this.viewport)) ?? false;
+      if (pointers.size === 1) pieceActive = this.pieceInput?.begin(screenToWorld(localPoint(event), this.camera, this.viewport), event.pointerType === 'touch' ? 13 / this.camera.zoom : 0) ?? false;
       else if (pieceActive) { pieceActive = false; this.pieceInput?.end(false); }
       rebase();
     };
@@ -129,6 +129,12 @@ export class CameraController {
       const delta = { left: { x: 60, y: 0 }, right: { x: -60, y: 0 }, up: { x: 0, y: 60 }, down: { x: 0, y: -60 } }[action];
       this.camera = panCamera(this.camera, delta, this.viewport);
     }
+    this.onChange(this.camera);
+  }
+
+  focus(point: Vec2) {
+    this.cancelGesture();
+    this.camera = limitCamera({ ...this.camera, center: point, zoom: fitZoom(this.viewport) * 4 }, this.viewport);
     this.onChange(this.camera);
   }
 

@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DEMO, distributePieces, generatePieces } from '../../src/game/core/puzzle/puzzle';
+import { DEMO, DEMO48, distributePieces, generatePieces } from '../../src/game/core/puzzle/puzzle';
 import { canonicalCenter } from '../../src/game/core/puzzle/groups';
 import { centerCamera, worldToScreen, type Vec2 } from '../../src/game/core/camera/camera';
 
 const initial = distributePieces(generatePieces(DEMO), DEMO.seed);
-async function setup(page: Page) {
-  await page.goto('/play');
+async function setup(page: Page, count = 24) {
+  await page.goto(count === 48 ? '/play?pieces=48' : '/play');
   await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
   const canvas = page.locator('canvas');
   const box = (await canvas.boundingBox())!;
@@ -13,8 +13,8 @@ async function setup(page: Page) {
   const camera = centerCamera(viewport);
   return { canvas, camera, point: (world: Vec2) => { const p = worldToScreen(world, camera, viewport); return { x: p.x + box.x, y: p.y + box.y }; } };
 }
-async function orient(page: Page, index: number) {
-  const pose = initial[index];
+async function orient(page: Page, index: number, placements = initial) {
+  const pose = placements[index];
   await page.getByLabel('Selecionar peça').selectOption(pose.pieceId);
   for (let i = 0; i < (4 - pose.quarterTurn) % 4; i++) await page.getByRole('button', { name: 'Girar peça', exact: true }).click();
   await expect(page.getByLabel('Orientação da peça')).toHaveText('0°');
@@ -61,14 +61,16 @@ test('encaixa com câmera girada e move/gira os dois membros como grupo', async 
   await page.screenshot({ path: testInfo.outputPath('grupo.png'), fullPage: true });
 });
 
-test('monta as 24 peças pela interface e conclui sem duplicar conexões', async ({ page, isMobile }, testInfo) => {
-  test.setTimeout(120000);
+for (const definition of [DEMO, DEMO48]) test(`monta as ${definition.rows * definition.columns} peças pela interface e conclui sem duplicar conexões`, async ({ page, isMobile }, testInfo) => {
+  test.setTimeout(180000);
+  const count = definition.rows * definition.columns;
+  const placements = distributePieces(generatePieces(definition), definition.seed);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  const { canvas, point } = await setup(page);
-  for (let index = 0; index < initial.length; index++) {
-    await orient(page, index);
-    await drag(page, point(initial[index].center), point(canonicalCenter(initial[index].pieceId, DEMO)), isMobile);
+  const { canvas, point } = await setup(page, count);
+  for (let index = 0; index < placements.length; index++) {
+    await orient(page, index, placements);
+    await drag(page, point(placements[index].center), point(canonicalCenter(placements[index].pieceId, definition)), isMobile);
     if (index > 0) await expect(page.getByRole('button', { name: 'Girar grupo' })).toBeEnabled();
   }
   await expect(page.getByLabel('Progresso do puzzle')).toHaveText('Puzzle completo! Você pode alinhar a obra ao tapete.');
@@ -83,9 +85,9 @@ test('monta as 24 peças pela interface e conclui sem duplicar conexões', async
   await expect(page.getByLabel('Progresso do puzzle')).toContainText('Puzzle completo!');
   await page.getByLabel('Selecionar peça').selectOption('');
   await page.screenshot({ path: testInfo.outputPath('completo.png'), fullPage: true });
-  await expect(canvas).toHaveAttribute('data-piece-count', '24');
+  await expect(canvas).toHaveAttribute('data-piece-count', String(count));
   expect(errors).toEqual([]);
   await page.reload();
   await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
-  await expect(page.getByLabel('Progresso do puzzle')).toHaveText('0 de 38 encaixes · 24 grupos');
+  await expect(page.getByLabel('Progresso do puzzle')).toHaveText(`0 de ${definition.rows * (definition.columns - 1) + definition.columns * (definition.rows - 1)} encaixes · ${count} grupos`);
 });

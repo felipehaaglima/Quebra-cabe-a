@@ -4,7 +4,7 @@ import { boundGroup, createPuzzleState, groupPlacements, puzzleProgress, rotateG
 import type { PieceGeometry, Placement, PuzzleDefinition } from '../core/puzzle/puzzle';
 
 export interface PieceInput {
-  begin(point: Vec2): boolean;
+  begin(point: Vec2, hitSlop?: number): boolean;
   move(point: Vec2): void;
   end(commit: boolean, zoom?: number): void;
   rotate(): boolean;
@@ -52,8 +52,8 @@ export class PieceController implements PieceInput {
     this.order = [...this.order.filter((item) => !members.has(item)), ...this.order.filter((item) => members.has(item))];
     this.publish();
   }
-  begin(point: Vec2): boolean {
-    const hit = hitPiece(point, this.pieces, this.placements, this.definition);
+  begin(point: Vec2, hitSlop = 0): boolean {
+    const hit = hitPiece(point, this.pieces, this.placements, this.definition, hitSlop);
     this.select(hit?.pieceId ?? null);
     const group = this.selectedGroup();
     if (!group) return false;

@@ -19,6 +19,8 @@ test('teclado abre a mesa com movimento reduzido', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Pular para o conteúdo' })).toBeFocused();
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
+  await expect(page.getByLabel('Número de peças')).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Iniciar' })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/play$/);
