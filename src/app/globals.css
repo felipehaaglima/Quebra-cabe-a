@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+:root { --paper: #f5f1e8; --ink: #293b31; --muted: #5e665c; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: Arial, Helvetica, sans-serif; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+a { color: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid #9d4e2b; outline-offset: 5px; }
+.skip-link { position: absolute; top: 12px; left: 12px; z-index: 2; padding: 12px; background: white; transform: translateY(-200%); }
+.skip-link:focus { transform: translateY(0); }
+.brand { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; text-decoration: none; font-family: Georgia, serif; font-size: 21px; font-weight: bold; }
+.brand span { font-size: 32px; color: #8f492e; }
+.version { display: none; font-size: 10px; letter-spacing: 2px; color: var(--muted); }
+.hero { display: grid; gap: 32px; padding: 32px 0 48px; }
+.eyebrow { margin: 0 0 22px; color: #80503b; font-size: 11px; font-weight: bold; letter-spacing: 3px; }
+h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(48px, 8vw, 80px); font-weight: normal; line-height: 1.06; letter-spacing: -2px; }
+h1 em { color: #657552; }
+.intro { max-width: 350px; margin: 25px 0; font-size: 16px; line-height: 1.8; color: var(--muted); }
+.start-button { display: flex; align-items: center; justify-content: space-between; gap: 40px; min-height: 56px; min-width: 190px; padding: 16px 24px; border: 0; border-radius: 8px; background: #314d3c; color: #fffdf7; font-size: 16px; cursor: pointer; }
+.start-button:hover { background: #243d2d; }
+.development-note { max-width: 350px; margin: 14px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.availability { margin-top: 16px; max-width: 350px; border-left: 3px solid #657552; padding: 8px 12px; font-size: 14px; line-height: 1.6; }
+.illustration { position: relative; display: grid; place-items: center; min-height: 340px; border-radius: 140px 140px 12px 12px; overflow: hidden; background: repeating-linear-gradient(94deg, #dbc4a5 0, #dfcaaa 3px, #ddc6a7 6px, #e0caaa 40px); box-shadow: inset 0 0 60px #9d715b26; }
+.table-label { position: absolute; top: 38px; font-size: 9px; letter-spacing: 2px; color: #66503d; }
+.felt { position: relative; width: 65%; aspect-ratio: 1.2; padding: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; transform: rotate(-9deg); border: 7px solid #8f9b75; border-radius: 8px; background: #7b8e69; box-shadow: 9px 14px 20px #60432630; }
+.tile { background: #e6d5a9; border-radius: 6px; }
+.tile-one { background: #d9bd82; border-radius: 30px 6px 6px; }
+.tile-two { background: #b3bf9a; }
+.tile-three { background: #7e9a8d; }
+.tile-four { background: #536f60; border-radius: 6px 6px 30px; }
+.loose-piece { position: absolute; width: 38px; height: 38px; border-radius: 6px; box-shadow: 3px 4px 4px #60432630; }
+.loose-piece::before { content: ''; position: absolute; width: 16px; height: 16px; top: -10px; left: 11px; border-radius: 50%; background: inherit; }
+.piece-one { background: #ad603f; left: 9%; bottom: 22%; transform: rotate(21deg); }
+.piece-two { background: #e9d9af; right: 10%; top: 28%; transform: rotate(24deg); }
+.illustration-caption { position: absolute; bottom: 24px; color: #604935; font: italic 16px Georgia, serif; }
+.features { display: grid; gap: 26px; border-top: 1px solid #d9d7c9; border-bottom: 1px solid #d9d7c9; padding: 28px 0; }
+.feature-number { color: #80503b; font-size: 11px; }
+h2 { font: normal 23px Georgia, serif; margin: 10px 0; }
+.features p { font-size: 14px; line-height: 1.7; color: var(--muted); margin: 0; }
+footer { color: var(--muted); font-size: 11px; line-height: 1.8; }
+@media (min-width: 640px) { .version { display: block; } .features { grid-template-columns: repeat(3, 1fr); gap: 30px; } }
+@media (min-width: 900px) { .hero { grid-template-columns: 1fr 1fr; align-items: center; gap: 60px; padding: 50px 0 64px; } .illustration { min-height: 490px; } }

@@ -1,6 +1,6 @@
 # Quebra-cabeça — jogo cozy, mobile-first
 
-> **Status em 30/10/2026:** projeto em fase de planejamento. Este repositório contém o blueprint de produto e engenharia; **não contém ainda um jogo implementado**.
+> **Status em 30/10/2026:** Fase 0.1 implementada: fundação Next.js e landing mobile-first. **O jogo ainda não está implementado.**
 
 Um jogo web de montar quebra-cabeças em uma mesa virtual acolhedora. O jogador navega por uma mesa grande, movimenta e gira peças, usa um tapete de montagem, organiza peças em sacolas etiquetadas, ganha moedas por progresso legítimo e desbloqueia novos puzzles. A experiência deve funcionar primeiro no celular e se adaptar elegantemente ao desktop.
 
@@ -28,9 +28,11 @@ Um jogo web de montar quebra-cabeças em uma mesa virtual acolhedora. O jogador 
 | [Decisões e riscos](docs/08-DECISOES.md) | Hipóteses, trade-offs, orçamento e decisões em aberto |
 | [Orientações para agentes](AGENTS.md) | Regras para Codex/assistentes que implementarem o projeto |
 
-## Stack escolhida (proposta, não instalada)
+## Stack e arquitetura
 
-- **Frontend/BFF:** Next.js (App Router) + TypeScript + React.
+- **Fundação instalada:** Next.js 16 (App Router), React 19, TypeScript estrito e Tailwind CSS 4.
+- **Testes instalados:** Vitest + Testing Library e Playwright.
+- **Demais camadas abaixo:** planejadas para as próximas fases.
 - **Renderização do tabuleiro:** PixiJS v8 (canvas 2D/WebGL/WebGPU conforme suporte), isolado da UI React.
 - **Estilos/componentes:** Tailwind CSS + componentes acessíveis; ícones Lucide.
 - **Estado local do jogo:** Zustand; persistência IndexedDB via Dexie.
@@ -52,15 +54,37 @@ Um jogo web de montar quebra-cabeças em uma mesa virtual acolhedora. O jogador 
 
 **Fora do MVP 0.1:** banco remoto, login obrigatório, compra real, marketplace, Drive, multiplayer e geração paga de imagens. Tudo isso está especificado para etapas seguintes.
 
-## Como começar a implementar
+## Desenvolvimento local
 
-1. Solicitar ao Codex a **Fase 0** em [docs/07-ROADMAP.md](docs/07-ROADMAP.md), seguindo [AGENTS.md](AGENTS.md).
-2. Criar e validar o esqueleto Next.js e os comandos lint, typecheck, test e build.
-3. Importar o repositório na Vercel depois do primeiro build bem-sucedido.
-4. Trabalhar em branches e PRs; verificação visual em viewport de celular e desktop antes de aceitar mudanças.
-5. Passar à primeira vertical slice: uma mesa com uma peça arrastável e câmera navegável.
+Use Node.js 24 LTS (`nvm use`, se disponível) e npm. Nenhuma variável de ambiente, conta ou serviço externo é necessário.
 
-> **Importante:** este README não afirma que os comandos de desenvolvimento já existem. Eles serão adicionados na Fase 0.
+```sh
+npm ci
+npm run dev
+```
+
+Abra a porta 3000 no seu ambiente local. A landing explica que a montagem ainda não está disponível ao acionar **Iniciar**. A ilustração é decorativa, criada em CSS, e não representa um tabuleiro funcional. Não há áudio, animações, armazenamento ou integrações nesta fase.
+
+## Validação
+
+```sh
+npm run lint
+npm run typecheck
+npm test
+npm run build
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+Playwright inicia o servidor de produção automaticamente; execute o build antes e deixe a porta 3000 livre. Os projetos cobrem 390×844 com toque e 1440×900 com mouse, navegação por teclado, aviso de desenvolvimento, recarregamento e ausência de overflow horizontal. As capturas ficam em `test-results/` (ignorado pelo Git). Para usar Chromium já instalado, informe `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` ao executar os testes. Não é necessário instalar browsers para os testes unitários.
+
+Para servir manualmente o build: `npm run start`. `npm run test:watch` executa os testes de componentes em modo interativo.
+
+A rota fica em `src/app`; a interação da landing, em `src/components/landing`. O futuro motor puro, renderizador PixiJS client-only e persistência serão implementados separadamente conforme [arquitetura](docs/03-ARQUITETURA.md). PixiJS e serviços de backend ainda não foram adicionados.
+
+## Próximos passos
+
+A Fase 0.2 conecta a Vercel após o primeiro build validado e prepara assets licenciados. Depois, a Fase 1.1 inicia o canvas, mesa e câmera. Testes em dispositivos reais de iOS/Android continuam necessários quando houver gestos e canvas.
 
 ## Organização de entregas
 

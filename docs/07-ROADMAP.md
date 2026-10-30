@@ -29,6 +29,8 @@
 
 ### F0.1 — Bootstrap do app
 
+**Implementada:** landing Next.js em `src/app`, TypeScript estrito, Tailwind e scripts de desenvolvimento/qualidade. Vitest cobre a interação de início e Playwright cobre mobile/desktop. O jogo e o deploy Vercel pertencem às próximas entregas.
+
 - Criar Next.js App Router com TypeScript strict, src/, Tailwind, ESLint e lockfile.
 - Página inicial com marca temporária, botão "Iniciar" e destaque de que está em desenvolvimento.
 - Garantir projetos funcionais com npm run dev, lint, typecheck, test e build.
