@@ -25,7 +25,7 @@ for (const definition of [DEMO, DEMO48]) describe(`recompensas ${definition.rows
     expect(model.rewardLedger).toHaveLength(canonicalConnections(definition).length + 1);
     expect(feedback.mock.calls.filter(([event]) => event === 'complete')).toHaveLength(1);
     model.snap(); model.alignCompleted(); model.rotate(); expect(model.localCoinBalance).toBe(total);
-    const save = decodeSave({ schemaVersion: 3, puzzleId: definition.id, definitionKey: definitionKey(definition), revision: 1, savedAt: new Date().toISOString(), model: model.exportModel(), camera: { center: { x: 0, y: 0 }, relativeZoom: 1, angleRad: 0 } }, definition);
+    const save = decodeSave({ schemaVersion: 4, puzzleId: definition.id, definitionKey: definitionKey(definition), revision: 1, savedAt: new Date().toISOString(), model: model.exportModel(), camera: { center: { x: 0, y: 0 }, relativeZoom: 1, angleRad: 0 } }, definition);
     const restored = setup(definition).model; restored.restore(save.model); restored.newPuzzle();
     expect(restored.localCoinBalance).toBe(total); expect(restored.completedAt).toBeNull();
     expect(restored.bags.every((bag) => !bag.pieceIds.length)).toBe(true);
@@ -37,7 +37,7 @@ for (const definition of [DEMO, DEMO48]) describe(`recompensas ${definition.rows
     const { rewardLedger: _ledger, preferences: _preferences, ...legacy } = snapshot;
     void _ledger; void _preferences;
     const save = decodeSave({ schemaVersion: 2, puzzleId: definition.id, definitionKey: definitionKey(definition), revision: 1, savedAt: new Date().toISOString(), model: { ...legacy, localCoinBalance: 0 }, camera: { center: { x: 0, y: 0 }, relativeZoom: 1, angleRad: 0 } }, definition);
-    expect(save.schemaVersion).toBe(3); expect(save.model.rewardLedger.every((entry) => entry.amount === 0)).toBe(true);
+    expect(save.schemaVersion).toBe(4); expect(save.model.rewardLedger.every((entry) => entry.amount === 0)).toBe(true);
     const restored = setup(definition).model; restored.restore(save.model); restored.newPuzzle(); assemble(restored, definition);
     expect(restored.localCoinBalance).toBe(0);
   });

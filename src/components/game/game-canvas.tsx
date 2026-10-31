@@ -9,7 +9,6 @@ import { CameraController, type CameraAction } from '@/game/input/camera-control
 import { fitZoom } from '@/game/core/camera/camera';
 import styles from './game.module.css';
 import { DEMO, DEMO48, generatePieces, distributePieces } from '@/game/core/puzzle/puzzle';
-import type { MatGuideHint } from '@/game/core/puzzle/mat-guide';
 import { BagPanel } from './bag-panel';
 import { LocalSaveSession } from '@/game/persistence/local-save';
 import { initialBags, type BagState } from '@/game/core/puzzle/bags';
@@ -32,7 +31,7 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
   const [bagView, setBagView] = useState<{ bags: readonly BagState[]; hidden: readonly string[]; open: boolean; activeId: string | null; notice: string }>({ bags: initialBags(), hidden: [], open: false, activeId: null, notice: '' });
   const [selection, setSelection] = useState<{ id: string | null; quarterTurn: number; size: number }>({ id: null, quarterTurn: 0, size: 0 });
   const [progress, setProgress] = useState({ connections: 0, expected: definition.rows * (definition.columns - 1) + definition.columns * (definition.rows - 1), groupCount: definition.rows * definition.columns, completed: false });
-  const [guide, setGuide] = useState<{ enabled: boolean; hint: MatGuideHint }>({ enabled: false, hint: 'none' });
+  const [guide, setGuide] = useState({ enabled: true, placing: false });
   const [status, setStatus] = useState('Preparando sua mesa…');
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -111,8 +110,8 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
           updateBags(world.getChildByLabel('bags')!, info.bags, info.dropBagId);
           canvas.dataset.visiblePieces = String(placements.length - info.hiddenIds.length);
           setBagView((previous) => previous.bags === info.bags && previous.open === info.bagPanelOpen && previous.activeId === info.openBagId && previous.notice === info.notice ? previous : { bags: info.bags, hidden: info.hiddenIds, open: info.bagPanelOpen, activeId: info.openBagId, notice: info.notice });
-          updateMatGuide(world, pieces, definition, info.guideEnabled, info.selectedMembers, info.guideHint);
-          setGuide((previous) => previous.enabled === info.guideEnabled && previous.hint === info.guideHint ? previous : { enabled: info.guideEnabled, hint: info.guideHint });
+          updateMatGuide(world, definition, info.guideEnabled, info.guideHover);
+          setGuide((previous) => previous.enabled === info.guideEnabled && previous.placing === (info.guideHover.length > 0) ? previous : { enabled: info.guideEnabled, placing: info.guideHover.length > 0 });
           app.render();
           const quarterTurn = placements.find((item) => item.pieceId === selectedId)?.quarterTurn ?? 0;
           setSelection((previous) => previous.id === selectedId && previous.quarterTurn === quarterTurn && previous.size === info.selectedMembers.length ? previous : { id: selectedId, quarterTurn, size: info.selectedMembers.length });
@@ -170,13 +169,7 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
 
   function act(action: CameraAction) { controller.current?.act(action); }
 
-  const hint = bagView.notice || (!guide.enabled ? '' : {
-    none: 'Guia ligado: selecione uma peça ou grupo.',
-    'wrong-orientation': 'Gire a seleção para 0° para ajustar ao tapete.',
-    far: 'Siga os contornos no tapete e aproxime a seleção.',
-    near: 'Perto do lugar certo. Solte ou use Encaixar.',
-    aligned: 'Seleção alinhada. Você pode movê-la livremente.',
-  }[guide.hint]);
+  const hint = bagView.notice || (!guide.enabled ? '' : guide.placing ? 'Solte para tentar neste espaço.' : 'Arraste sobre um espaço reservado e solte para tentar.');
   return <main className={styles.game}>
     <header className={styles.header}><Link href="/" className={styles.back}>← Início</Link><div><h1>Mesa tranquila</h1><p>Lago sereno · {count} peças</p></div><span className={styles.saveDot} title={saveStatus} aria-label={saveStatus.startsWith('Não foi') ? 'Falha no progresso' : 'Progresso automático'}>●</span></header>
     <div className={styles.stage} ref={host} data-testid="mesa">

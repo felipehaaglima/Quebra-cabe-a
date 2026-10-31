@@ -28,3 +28,7 @@ Capturas conferidas em mobile/desktop: mesa inicial, preferências, bolsas, grup
 3. Conferir no deploy Vercel a versão integrada, restauração do progresso, conclusão e nova montagem. A URL/estado do deploy não foi verificado neste ambiente.
 
 A validação automatizada não substitui esses itens. Login, catálogo/loja, backend, Drive e multiplayer continuam fora desta entrega.
+
+## Evolução posterior do guia
+
+Este registro descreve a entrega original da Fase 4. Em seguida, a pedido do usuário, o guia passou a reservas neutras sem imagem, padrão ligado em novas montagens, amarelo apenas na tentativa e retorno à origem/bolsa ao falhar. O snapshot evoluiu para v4 para preservar origem de bolsas após reload. A regra atual está em `docs/04-MOTOR-DE-JOGO.md` e `docs/05-DADOS-E-ECONOMIA.md`.

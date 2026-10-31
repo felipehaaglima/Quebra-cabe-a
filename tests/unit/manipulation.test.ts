@@ -7,7 +7,7 @@ import { centerCamera, rotate, screenToWorld, worldToScreen, WORLD } from '../..
 const shapes = generatePieces(DEMO);
 const initial = distributePieces(shapes, DEMO.seed);
 const viewport = { width: 800, height: 600 };
-const makeInput = () => new PieceController(shapes, initial, DEMO, () => {});
+const makeInput = () => { const input = new PieceController(shapes, initial, DEMO, () => {}); input.setGuideEnabled(false); return input; };
 
 describe('seleção e movimento', () => {
   it('move só a peça atingida, mantém o ponto agarrado e traz à frente', () => {

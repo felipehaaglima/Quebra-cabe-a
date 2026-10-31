@@ -32,7 +32,7 @@ export function createWorld(texture: Texture, pieces: readonly PieceGeometry[], 
     .roundRect(-MAT.width / 2, -MAT.height / 2, MAT.width, MAT.height, 5).fill(0x7c8c68);
   for (let y = -MAT.height / 2 + 8; y < MAT.height / 2; y += 8) mat.moveTo(-MAT.width / 2 + 5, y).lineTo(MAT.width / 2 - 5, y).stroke({ color: 0xc2cda9, alpha: 0.08, width: 1 });
   world.addChild(mat);
-  world.addChild(createMatGuide(texture, pieces, definition));
+  world.addChild(createMatGuide(definition));
   const caption = new Text({ text: 'Seu espaço para montar', style: { fontFamily: 'Georgia, serif', fontSize: 27, fill: 0xe7ebdb, align: 'center' } });
   caption.label = 'mat-caption';
   caption.anchor.set(0.5); world.addChild(caption);

@@ -22,7 +22,7 @@ test('mesa domina a tela, ações são contextuais e preferências persistem', a
   await expect(page.getByLabel('Volume dos efeitos')).toHaveValue('0.2');
   await expect(page.getByLabel('Qualidade da mesa')).toHaveValue('low');
   await tools.click(); await expect(canvas).toHaveAttribute('data-visible-pieces', '24');
-  await page.getByRole('button', { name: 'Guia no tapete' }).click();
+  await expect(page.getByRole('button', { name: 'Guia no tapete' })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: 'Bolsas', exact: true }).click();
   await page.getByRole('button', { name: 'Fechar bolsas' }).click();
   await expect(page.getByRole('button', { name: 'Guia no tapete' })).toHaveAttribute('aria-pressed', 'true');

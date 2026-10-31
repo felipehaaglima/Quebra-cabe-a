@@ -4,90 +4,83 @@ import { DEMO, DEMO48, generatePieces, distributePieces } from '../../src/game/c
 import { canonicalCenter } from '../../src/game/core/puzzle/groups';
 import { centerCamera, worldToScreen, type Vec2 } from '../../src/game/core/camera/camera';
 
-async function drag(page: Page, from: Vec2, to: Vec2, touch: boolean, cancel = false) {
+async function gesture(page: Page, from: Vec2, to: Vec2, touch: boolean, during?: () => Promise<void>, cancel = false) {
   if (touch) {
     const session = await page.context().newCDPSession(page);
     await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ id: 1, ...from }] });
     await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ id: 1, ...to }] });
-    await session.send('Input.dispatchTouchEvent', { type: cancel ? 'touchCancel' : 'touchEnd', touchPoints: [] });
-    await session.detach();
+    await during?.();
+    await session.send('Input.dispatchTouchEvent', { type: cancel ? 'touchCancel' : 'touchEnd', touchPoints: [] }); await session.detach();
   } else {
-    await page.mouse.move(from.x, from.y); await page.mouse.down();
-    await page.mouse.move(to.x, to.y, { steps: 4 });
+    await page.mouse.move(from.x,from.y); await page.mouse.down(); await page.mouse.move(to.x,to.y,{steps: 4}); await during?.();
     if (cancel) await page.locator('canvas').dispatchEvent('pointercancel', { pointerId: 1 });
     await page.mouse.up();
   }
 }
-
-for (const definition of [DEMO, DEMO48]) test(`guia opcional com ${definition.rows * definition.columns} peças, câmera girada e grupos livres`, async ({ page, isMobile }, testInfo) => {
-  test.setTimeout(60000);
+for (const definition of [DEMO,DEMO48]) test(`reservas neutras ${definition.rows * definition.columns}: tentativa, retorno e encaixe com câmera girada`,async ({page,isMobile},testInfo) => {
   const count = definition.rows * definition.columns;
-  const initial = distributePieces(generatePieces(definition), definition.seed);
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto(count === 48 ? '/play?pieces=48' : '/play');
-  await ready(page);
-  const canvas = page.locator('canvas');
-  const toggle = page.getByRole('button', { name: 'Guia no tapete' });
-  const hint = page.getByLabel('Ajuda do tapete');
-  const progress = page.getByLabel('Progresso do puzzle');
-  const selection = page.getByLabel('Selecionar peça');
-  const box = (await canvas.boundingBox())!;
-  const viewport = { width: box.width, height: box.height };
-  const camera = centerCamera(viewport);
-  const point = (world: Vec2) => { const p = worldToScreen(world, camera, viewport); return { x: p.x + box.x, y: p.y + box.y }; };
-  const first = canonicalCenter('0:0', definition);
-  const second = canonicalCenter('0:1', definition);
-  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
-  await selection.selectOption('0:0');
-  for (let i = 0; i < (5 - initial[0].quarterTurn) % 4; i++) await page.getByRole('button', { name: 'Girar peça', exact: true }).click();
-  await expect(page.getByLabel('Orientação da peça')).toHaveText('90°');
-  await drag(page, point(initial[0].center), point({ x: first.x + 5, y: first.y + 3 }), isMobile);
-  await expect(hint).toContainText('Gire a seleção para 0°');
-  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Girar peça', exact: true }).click();
-  await expect(hint).toContainText('Perto do lugar certo');
-  await page.screenshot({ path: testInfo.outputPath('guia-perto.png'), fullPage: true });
-  await page.getByRole('button', { name: 'Encaixar', exact: true }).click();
-  await expect(hint).toContainText('Seleção alinhada');
-  await selection.focus();
-  const aligned = await canvas.screenshot();
-  await toggle.click(); await toggle.click(); await selection.focus();
-  expect(await canvas.screenshot()).toEqual(aligned);
+  await page.goto(count===48 ? '/play?pieces=48' : '/play'); await ready(page);
+  const toggle = page.getByRole('button',{name:'Guia no tapete'}), canvas = page.locator('canvas'), hint=page.getByLabel('Ajuda do tapete');
+  await expect(toggle).toHaveAttribute('aria-pressed','true');
+  await page.screenshot({path:testInfo.outputPath('reservas-sem-imagem.png'),fullPage:true});
+  const initial=distributePieces(generatePieces(definition),definition.seed);
+  const box=(await canvas.boundingBox())!, viewport={width:box.width,height:box.height}, camera=centerCamera(viewport);
+  const point=(p:Vec2)=>{const v=worldToScreen(p,camera,viewport);return {x:v.x+box.x,y:v.y+box.y};};
+  const selection=page.getByLabel('Selecionar peça');
+  const orient=async (index:number)=> { await selection.selectOption(initial[index].pieceId); for(let i=0;i<(4-initial[index].quarterTurn)%4;i++)await page.getByRole('button',{name:'Girar peça',exact:true}).click(); };
+  await orient(0);
+  const wrong=canonicalCenter('0:1',definition);
+  await gesture(page,point(initial[0].center),point(wrong),isMobile,async()=>{
+    await expect(hint).toHaveText('Solte para tentar neste espaço.');
+    await page.screenshot({path:testInfo.outputPath('tentativa-amarela-errada.png'),fullPage:true});
+  });
+  await expect(hint).toContainText('local anterior');
+  // Retry from the original location: a failed drop must not have moved it.
+  const first=canonicalCenter('0:0',definition);
+  await gesture(page,point(initial[0].center),point({x:first.x+definition.imageWidth/definition.columns*0.4,y:first.y+definition.imageHeight/definition.rows*0.4}),isMobile,async()=>{
+    await expect(hint).toHaveText('Solte para tentar neste espaço.');
+    await page.screenshot({path:testInfo.outputPath('tentativa-amarela-certa.png'),fullPage:true});
+  });
+  await expect(selection).toHaveValue('0:0');
+  await expect(page.getByLabel('Moedas locais')).toHaveText('◉ 0');
+  // A whole group rejects an invalid mat cell without losing its connections.
+  const turns=isMobile?1:3;
+  for(let i=0;i<turns;i++)await page.getByRole('button',{name:'Girar 90°',exact:true}).click();
+  await page.getByRole('button',{name:'Diminuir zoom'}).click(); await page.getByRole('button',{name:'Diminuir zoom'}).click();
+  camera.angleRad=turns*Math.PI/2;camera.zoom*=0.64;
+  await orient(1); const second=canonicalCenter('0:1',definition);
+  await gesture(page,point(initial[1].center),point(second),isMobile);
+  await expect(page.getByRole('button',{name:'Girar grupo'})).toBeVisible();
+  const expected=definition.rows*(definition.columns-1)+definition.columns*(definition.rows-1);
+  await expect(page.getByLabel('Progresso do puzzle')).toHaveText(`1 de ${expected} encaixes · ${count-1} grupos`);
+  await gesture(page,point(second),point(canonicalCenter('1:1',definition)),isMobile);
+  await expect(hint).toContainText('local anterior');
+  await expect(page.getByLabel('Moedas locais')).toHaveText('◉ 1');
+  // Original group is still available to pick up after rejection.
+  await gesture(page,point(second),point({x:650,y:0}),isMobile);
+  await expect(page.getByRole('button',{name:'Girar grupo'})).toBeVisible();
+  await page.reload();await ready(page);await expect(toggle).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByLabel('Progresso do puzzle')).toHaveText(`1 de ${expected} encaixes · ${count-1} grupos`);
+});
 
-  const turns = isMobile ? 1 : 3;
-  for (let i = 0; i < turns; i++) await page.getByRole('button', { name: 'Girar 90°', exact: true }).click();
-  await page.getByRole('button', { name: 'Diminuir zoom' }).click();
-  await page.getByRole('button', { name: 'Diminuir zoom' }).click();
-  camera.angleRad = turns * Math.PI / 2; camera.zoom *= 0.64;
-  const far = { x: first.x + 100, y: first.y + 100 };
-  await drag(page, point(first), point(far), isMobile);
-  await expect(hint).toContainText('Siga os contornos');
-  const beforeCancel = await canvas.screenshot();
-  await drag(page, point(far), point({ x: first.x + 4, y: first.y + 4 }), isMobile, true);
-  await expect(hint).toContainText('Siga os contornos');
-  expect(await canvas.screenshot()).toEqual(beforeCancel);
-  await drag(page, point(far), point(first), isMobile);
-  await expect(hint).toContainText('Seleção alinhada');
-  await selection.selectOption('0:1');
-  for (let i = 0; i < (4 - initial[1].quarterTurn) % 4; i++) await page.getByRole('button', { name: 'Girar peça', exact: true }).click();
-  await drag(page, point(initial[1].center), point({ x: second.x + 4, y: second.y + 3 }), isMobile);
-  const expected = definition.rows * (definition.columns - 1) + definition.columns * (definition.rows - 1);
-  await expect(progress).toHaveText(`1 de ${expected} encaixes · ${count - 1} grupos`);
-  await expect(page.getByRole('button', { name: 'Girar grupo' })).toBeEnabled();
-  await drag(page, point(second), point({ x: second.x + 100, y: second.y + 100 }), isMobile);
-  await expect(hint).toContainText('Siga os contornos');
-  await drag(page, point({ x: second.x + 100, y: second.y + 100 }), point({ x: second.x + 6, y: second.y + 6 }), isMobile);
-  await expect(hint).toContainText('Seleção alinhada');
-  await expect(progress).toHaveText(`1 de ${expected} encaixes · ${count - 1} grupos`);
-  await page.getByRole('button', { name: 'Centralizar' }).click();
-  await page.screenshot({ path: testInfo.outputPath('guia-grupo.png'), fullPage: true });
-  await expect(canvas).toHaveAttribute('data-piece-count', String(count));
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.reload();
-  await ready(page);
-  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
-  await expect(progress).toHaveText(`1 de ${expected} encaixes · ${count - 1} grupos`);
-  expect(errors).toEqual([]);
+test('tentativa inválida de peça retirada retorna à bolsa mesmo após recarregar',async ({page,isMobile},testInfo)=>{
+  await page.goto('/play');await ready(page);
+  await page.getByRole('button',{name:'Bolsas',exact:true}).click();
+  const panel=page.getByRole('dialog',{name:'Bolsas'});
+  await panel.getByLabel('Peça para guardar').selectOption('0:0');await panel.getByRole('button',{name:'Guardar seleção',exact:true}).click();
+  await panel.getByRole('button',{name:'Retirar Peça 1',exact:true}).click();await panel.getByRole('button',{name:'Fechar bolsas'}).click();
+  await expect(page.getByLabel('Salvamento',{exact:true})).toHaveText('Salvo neste navegador.');await page.reload();await ready(page);
+  await page.getByLabel('Selecionar peça').selectOption('0:0');
+  const initial=distributePieces(generatePieces(DEMO),DEMO.seed)[0];
+  for(let i=0;i<(4-initial.quarterTurn)%4;i++)await page.getByRole('button',{name:'Girar peça',exact:true}).click();
+  const canvas=page.locator('canvas'),box=(await canvas.boundingBox())!,viewport={width:box.width,height:box.height},camera=centerCamera(viewport);
+  const point=(p:Vec2)=>{const v=worldToScreen(p,camera,viewport);return {x:v.x+box.x,y:v.y+box.y};};
+  await gesture(page,point({x:-390,y:270}),point(canonicalCenter('0:1',DEMO)),isMobile);
+  await expect(page.getByLabel('Ajuda do tapete')).toContainText('devolvida à bolsa');
+  await expect(canvas).toHaveAttribute('data-visible-pieces','23');
+  await page.getByRole('button',{name:'Bolsas',exact:true}).click();await expect(panel.getByRole('button',{name:'Bordas (1)',exact:true})).toBeVisible();
+  await page.screenshot({path:testInfo.outputPath('retorno-a-bolsa.png'),fullPage:true});
+  await panel.getByRole('button',{name:'Fechar bolsas'}).click();
+  await expect(page.getByLabel('Salvamento',{exact:true})).toHaveText('Salvo neste navegador.');await page.reload();await ready(page);
+  await expect(canvas).toHaveAttribute('data-visible-pieces','23');await expect(page.getByLabel('Moedas locais')).toHaveText('◉ 0');
 });

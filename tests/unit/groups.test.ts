@@ -104,6 +104,7 @@ describe('encaixes e grupos', () => {
   it('o controlador move/gira/cancela grupos e só encaixa na soltura válida', () => {
     const initial = [pose('0:0', { x: 0, y: 0 }), pose('0:1', { x: 80, y: 0 })];
     const input = new PieceController(pieces, initial, DEMO, () => {});
+    input.setGuideEnabled(false);
     input.begin(initial[1].center);
     const target = pose('0:1', { x: 4, y: 0 }).center;
     input.move(target); input.end(false);

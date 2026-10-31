@@ -114,14 +114,14 @@
 
 ### F2.5 — Guia opcional no tapete
 
-**Implementada:** botão Guia no tapete (desligado inicialmente), imagem suave e contornos reais proporcionais, destaque do alvo da seleção e orientação textual por proximidade. Soltar ou Encaixar/Enter ajusta somente peças/grupos próximos e a 0°, sem escala ou travas. Vizinhos já alinhados se unem com conexões únicas; o guia isolado não conta encaixes. Ativar/desativar não desloca peças. Funciona com 24/48 peças e câmera girada.
+**Implementada e refinada por solicitação do usuário em 31/10/2026:** guia ligado por padrão em novas montagens, espaços retangulares neutros sem imagem fantasma nem destaque verde do destino correto. Amarelo marca somente células sob a peça/grupo durante a tentativa, sem revelar validade. Validação na soltura: célula canônica e orientação original; qualquer ponto dentro da célula correta centraliza a peça. Erros sobre o tapete restauram a transformação anterior ou retornam à bolsa de origem, inclusive após reload. Movimentação fora do tapete e modo livre desligando o guia continuam disponíveis. Grupos retornam inteiros; erros não mudam conexões/saldo.
 
-- Oferecer um guia que possa ser ligado/desligado: imagem fantasma e/ou contornos proporcionais ao puzzle, sem mudar a escala das peças.
-- Indicar quando a peça ou grupo estiver perto de sua posição e orientação corretas no tapete; ajustar à posição exata apenas nessa proximidade, sem colocar peças em posições erradas.
-- Preservar a montagem livre fora do tapete, os encaixes entre vizinhas e a movimentação rígida dos grupos. Posicionar no guia não gera recompensa duplicada.
-- Validar por toque/mouse com câmera girada, zoom e ambas as quantidades de peças.
+- Guia descobrível e desligável; referência de imagem somente em Ver imagem.
+- Nenhum feedback de proximidade/cor revela o destino correto antes de soltar.
+- Sem mudar escala/geometria, travar a obra ou gerar recompensa por peça isolada.
+- Validar 24/48 peças, toque/mouse, câmera girada, tentativa correta/incorreta e retorno à bolsa.
 
-**Aceite:** ajuda descobrível e opcional; peças/grupos continuam livres para sair do tapete e não mudam de tamanho. Progresso e opção do guia são persistidos pela F3.2.
+**Aceite:** espaços e tentativas claros, sem imagem por baixo; restauração sem perda de peças/grupos/moedas. Saves existentes preservam a preferência; nova montagem usa guia ligado.
 
 ## Fase 3 — Sacolas e salvamento
 

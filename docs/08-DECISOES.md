@@ -142,3 +142,11 @@ Escopo completo autorizado pelo usuário. Prioridade de UI: mesa dominante, quat
 Recompensas ficam no motor puro e ledger do snapshot v3, jamais no renderer. +1/conexão; bônus configurado +20/+30. Ledger por definição atravessa nova montagem para impedir farming; saldos de 24/48 são independentes. Migração marca conexões antigas como premiadas com valor zero, sem gerar moeda retroativa. Novo puzzle reinicia a mesma definição determinística, com confirmação, mantendo preferências/saldo/ledger. Não adiciona catálogo, wallet global ou backend.
 
 A implementação da F4.3 não equivale à aprovação de release em aparelhos reais. Chromium emulado não comprova Safari iOS/Chrome Android físicos, qualidade sonora nem FPS em celulares. CI existente foi ajustada para dois workers; sua execução remota e o deploy Vercel precisam ser conferidos após push.
+
+## Guia padrão sem respostas visuais — 31/10/2026
+
+Pedido explícito do usuário substitui o guia fantasma/proximidade por reservas neutras. Novas montagens usam guia ligado; saves existentes mantêm a escolha. Malha retangular sem imagem/recortes e amarelo na célula sob o arraste, tanto certa quanto errada. Validação só ao tentar, sem feedback verde ou orientação antecipada. Referência manual continua em Ver imagem.
+
+Rollback é restrito a tentativas que alcançam o tapete; organização fora dele e modo livre são preservados. Grupos retornam rigidamente ao local anterior, com ledger intacto. Snapshot v4 guarda origem de retiradas de bolsa para suportar rejeição mesmo após reload. As origens terminam em colocação confirmada, nova organização fora do tapete, guardar/desligar guia; não há exclusão ou retorno para uma bolsa arbitrária.
+
+Validação da revisão: lint, typecheck, 126 testes unitários, build e 50 testes Playwright aprovados. Viewports 390×844 com toque emulado e 1440×900 com mouse; reservas 24/48, mesmo amarelo para tentativa certa/errada, célula inteira como alvo, rollback de peças/grupos, origem de bolsa após reload, cancelamento e integridade de moedas. Capturas do guia sem imagem e de ambas as tentativas foram conferidas. Teste físico iOS/Android permanece pendente.

@@ -278,3 +278,9 @@ Bolsas associam IDs de peças soltas ao inventário, sem excluir sua geometria o
 ## Recompensas (F4.2)
 
 Após um snap canônico, `claimRewards` compara as chaves de conexões e conclusão com o ledger persistido. O controlador atualiza saldo/ledger antes de publicar o snapshot e só então entrega eventos de feedback ao adaptador de áudio/visual. Publicar UI, selecionar, girar ou aproximar isoladamente no guia não cria recompensa. Nova montagem preserva ledger por definição, impedindo replays premiados. O renderer não altera saldo.
+
+## Revisão do guia — reservas e rollback (31/10/2026)
+
+`slotAt` converte centro lógico em célula, independentemente de ID/orientação. `hoveredSlots` fornece somente o espaço sob a peça/grupo em arraste ao renderer. O adaptador não recebe o destino canônico como realce, nem usa imagem ou cores de validação. `validMatPlacement` aceita orientação 0 e centros em suas células canônicas; `releaseWithGuide` centraliza e une apenas vizinhos válidos. O tamanho inteiro da célula é área de soltura, sem exigir proximidade antecipada do centro.
+
+No fim do drag, uma tentativa inválida que alcança células do tapete restaura o grupo original inteiro antes de publicar/save. Origens de bolsa pendentes retornam a peça à bolsa original e restauram sua transformação anterior. Erros não chegam ao ledger nem ao snap. Fora do tapete, permanece a organização/encaixe livre; desativar o guia confirma a retirada da bolsa. O modo livre continua disponível também sobre o tapete com guia desligado.

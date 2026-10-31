@@ -139,3 +139,9 @@
 A mesa recebe a maior parte da altura inicial. A dock mantém Bolsas, Guia, Ver imagem e Ferramentas; o painel de Ferramentas reúne visão, busca por peça, conforto, ajuda, backup e nova montagem, com rolagem própria. A seleção mostra giro/encaixe/desmarcar numa faixa fixa junto à dock, sem cobrir as peças. Progresso e saldo ocupam uma linha discreta. Dicas ficam em overlay, sem mudar o enquadramento. Saves com erro mantêm aviso visível fora do painel. A referência é recolhível, sem modal bloquear a mesa.
 
 Mute, volume, movimento reduzido e qualidade ficam persistidos por puzzle. O sistema pode reduzir movimento independentemente da preferência interna. A celebração não bloqueia a mesa e pode ser dispensada; o jogador escolhe alinhar/enquadrar a obra no tapete. Nova montagem pede confirmação separada dos controles da mesa e preserva moedas/preferências. Validar em dispositivo físico continua requisito de release.
+
+## Guia com reservas neutras (31/10/2026)
+
+O padrão de uma montagem nova é guia ligado. A malha mostra apenas reservas retangulares proporcionais à base das peças, sem imagem ou saliências que revelem respostas. Selecionar uma peça não ilumina seu destino. Arrastar sobre uma célula a deixa amarela tanto para tentativas certas quanto erradas. O texto diz apenas para soltar e tentar, sem dica de proximidade ou orientação correta. A referência Ver imagem continua opcional e separada.
+
+Soltar sobre o tapete confirma apenas células e orientação canônicas; falhar devolve ao estado anterior. Peças retiradas de bolsas carregam uma origem pendente até confirmar a colocação, guardar novamente ou abandonar o guia; tentativa inválida/cancelada retorna à bolsa. Fora do tapete, a pessoa pode confirmar uma nova posição de organização. Essa confirmação encerra a origem anterior. Câmera/zoom não alteram reservas.

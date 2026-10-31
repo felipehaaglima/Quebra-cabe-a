@@ -8,6 +8,7 @@ const initial = distributePieces(generatePieces(DEMO), DEMO.seed);
 async function setup(page: Page, count = 24) {
   await page.goto(count === 48 ? '/play?pieces=48' : '/play');
   await ready(page);
+  await page.getByRole('button', { name: 'Guia no tapete' }).click();
   const canvas = page.locator('canvas');
   const box = (await canvas.boundingBox())!;
   const viewport = { width: box.width, height: box.height };

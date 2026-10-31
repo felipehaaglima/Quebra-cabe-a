@@ -17,9 +17,9 @@ Persistência no navegador via **IndexedDB (Dexie)**:
 
 ### Contrato implementado até a F4.2
 
-O contrato executável está em `src/game/persistence/snapshot.ts`. O banco `quebra-cabeca-local` usa a tabela `saves`, chave `puzzleId`: uma montagem por definição de 24/48 peças. `definitionKey` identifica definição/seed/asset. O snapshot v3 contém revisão, data, modelo (grupos, conexões, bolsas, ordem, guia, conclusão, preferências, saldo e ledger) e câmera (centro, zoom relativo e ângulo). Não há perfil online.
+O contrato executável está em `src/game/persistence/snapshot.ts`. O banco `quebra-cabeca-local` usa a tabela `saves`, chave `puzzleId`: uma montagem por definição de 24/48 peças. `definitionKey` identifica definição/seed/asset. O snapshot v4 contém revisão, data, modelo (grupos, conexões, bolsas, origens pendentes, ordem, guia, conclusão, preferências, saldo e ledger) e câmera (centro, zoom relativo e ângulo). Não há perfil online.
 
-O leitor migra v1 → v2 → v3. Na migração, conexões e conclusão anteriores são marcadas no ledger com valor zero, preservando a montagem sem crédito retroativo. O saldo reservado da v2 era zero; dados legados incompatíveis permanecem bloqueados e exportáveis. V3 valida o ledger sem chaves repetidas, somente conexões canônicas/bônus permitidos, valores configurados e saldo igual à soma das entradas. Conexões atuais precisam de registro de recompensa. Guardar/retirar peças ou usar o guia sem novas conexões não paga moedas.
+O leitor migra v1 → v2 → v3 → v4. Na migração, conexões e conclusão anteriores são marcadas no ledger com valor zero, preservando a montagem sem crédito retroativo. O saldo reservado da v2 era zero; dados legados incompatíveis permanecem bloqueados e exportáveis. V3 valida o ledger sem chaves repetidas, somente conexões canônicas/bônus permitidos, valores configurados e saldo igual à soma das entradas. Conexões atuais precisam de registro de recompensa. Guardar/retirar peças ou usar o guia sem novas conexões não paga moedas.
 
 A F4.2 usa +1 por conexão e bônus configurável (+20 para 24, +30 para 48); máximos 58/112 por definição. `Novo puzzle` preserva ledger e saldo, impedindo farming por restart. Câmera, preferências e bolsas não alteram recompensas. O saldo é demonstrativo por puzzle, não uma wallet online transferível.
 
@@ -217,3 +217,9 @@ buyPuzzle(userId, puzzleId, requestId):
 - Compra concorrente não torna saldo negativo nem duplica débito.
 - Uma conexão idêntica confirmada duas vezes gera apenas uma linha de recompensa.
 - A conclusão online cria uma obra na galeria do dono, associada aos ajudantes autorizados.
+
+## Snapshot v4 — origem de bolsa pendente
+
+A revisão do guia adiciona `model.bagReturns`: pieceId, bagId e grupo original singleton antes da retirada. O leitor migra v3 → v4 com lista vazia; v1/v2 seguem pela cadeia existente. Preferência salva do guia é respeitada; montagens novas começam ligadas. A validação exige origens únicas, bolsa existente, peça solta/visível e grupo original compatível e limitado à mesa.
+
+O retorno inválido/cancelado atualiza grupo, inventário da bolsa e origem pendente antes de um único publish confirmado. Uma retirada seguida de reload mantém a origem; tentativa válida, organização confirmada fora do tapete, guardar novamente ou desligar o guia encerram essa origem. Nova montagem limpa origens e usa guia ligado, mantendo saldo/ledger/preferências de conforto. Nenhum dado de save incompatível é sobrescrito.

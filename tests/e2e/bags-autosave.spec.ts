@@ -44,7 +44,7 @@ for (const definition of [DEMO, DEMO48]) test(`bolsas e restauração de ${defin
   await panel.getByRole('button', { name: 'Retirar Peça 1', exact: true }).click();
   await expect(canvas).toHaveAttribute('data-visible-pieces', String(count));
   await panel.getByRole('button', { name: 'Fechar bolsas' }).click(); await saved(page);
-  await page.getByRole('button', { name: 'Guia no tapete' }).click();
+  if (await page.getByRole('button', { name: 'Guia no tapete' }).getAttribute('aria-pressed') === 'false') await page.getByRole('button', { name: 'Guia no tapete' }).click();
   await page.getByRole('button', { name: 'Ampliar zoom' }).click(); await page.getByRole('button', { name: 'Girar 90°', exact: true }).click();
   await expect(page.getByLabel('Visão da mesa')).toHaveText('125% · 90°'); await saved(page);
   await page.reload(); await ready(page);
@@ -55,7 +55,7 @@ for (const definition of [DEMO, DEMO48]) test(`bolsas e restauração de ${defin
 
 test('soltura final sem último movimento ajusta no tapete e persiste', async ({ page, isMobile }) => {
   await page.goto('/play'); await ready(page);
-  await page.getByRole('button', { name: 'Guia no tapete' }).click();
+  if (await page.getByRole('button', { name: 'Guia no tapete' }).getAttribute('aria-pressed') === 'false') await page.getByRole('button', { name: 'Guia no tapete' }).click();
   await page.getByLabel('Selecionar peça').selectOption('0:0');
   const initial = distributePieces(generatePieces(DEMO), DEMO.seed)[0];
   for (let i = 0; i < (4 - initial.quarterTurn) % 4; i++) await page.getByRole('button', { name: 'Girar peça', exact: true }).click();
@@ -72,10 +72,10 @@ test('soltura final sem último movimento ajusta no tapete e persiste', async ({
     await page.mouse.move(start.x, start.y); await page.mouse.down(); await page.mouse.move(far.x, far.y);
     await canvas.dispatchEvent('pointerup', { pointerId: 1, clientX: end.x, clientY: end.y, button: 0 }); await page.mouse.up();
   }
-  await expect(page.getByLabel('Ajuda do tapete')).toContainText('Seleção alinhada'); await saved(page);
+  await expect(page.getByLabel('Ajuda do tapete')).toContainText('espaço reservado'); await saved(page);
   await page.reload(); await ready(page);
   await page.getByLabel('Selecionar peça').selectOption('0:0');
-  await expect(page.getByLabel('Ajuda do tapete')).toContainText('Seleção alinhada');
+  await expect(page.getByLabel('Ajuda do tapete')).toContainText('espaço reservado');
 });
 
 test('preserva save incompatível e oferece backup sem sobrescrever', async ({ page }) => {
@@ -95,7 +95,7 @@ test('preserva save incompatível e oferece backup sem sobrescrever', async ({ p
   await expect(page.getByLabel('Salvamento')).toContainText('Dados existentes foram preservados');
   const downloadPromise = page.waitForEvent('download'); await page.getByRole('button', { name: 'Baixar cópia' }).first().click();
   const download = await downloadPromise; expect(download.suggestedFilename()).toContain('backup.json');
-  await page.getByRole('button', { name: 'Guia no tapete' }).click();
+  if (await page.getByRole('button', { name: 'Guia no tapete' }).getAttribute('aria-pressed') === 'false') await page.getByRole('button', { name: 'Guia no tapete' }).click();
   await expect(page.getByLabel('Salvamento')).toContainText('salvamento desativado');
   await page.reload(); await ready(page); await expect(page.getByLabel('Salvamento')).toContainText('Dados existentes foram preservados');
 });

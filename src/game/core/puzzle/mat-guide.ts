@@ -1,4 +1,4 @@
-import { snapGroup, snapTolerance, type PieceGroup, type PuzzleState } from './groups';
+import { groupPlacements, snapGroup, snapTolerance, type PieceGroup, type PuzzleState } from './groups';
 import type { PieceGeometry, PuzzleDefinition } from './puzzle';
 
 export type MatGuideHint = 'none' | 'wrong-orientation' | 'far' | 'near' | 'aligned';
@@ -21,8 +21,10 @@ export function releaseWithGuide(state: PuzzleState, groupId: string, zoom: numb
   const original = state.groups.find((group) => group.id === groupId);
   if (!original) return state;
   const tolerance = snapTolerance(zoom);
-  const guided = enabled && ['near', 'aligned'].includes(matGuideHint(original, tolerance));
-  let next = guided ? guideGroup(state, groupId, tolerance) : state;
+  const attempt = enabled && hoveredSlots(original, definition).length > 0;
+  if (attempt && !validMatPlacement(original, definition)) return state;
+  const guided = attempt && validMatPlacement(original, definition);
+  let next = guided ? guideGroup(state, groupId, Infinity) : state;
   const anchor = original.pieceIds[0];
   let activeId = groupId;
   let threshold = guided ? 1e-7 : tolerance;
@@ -34,4 +36,17 @@ export function releaseWithGuide(state: PuzzleState, groupId: string, zoom: numb
     // Further neighbors must already align exactly: no cumulative magnet drift.
     threshold = 1e-7;
   }
+}
+
+// Neutral reservations: the hovered cell depends only on position, never identity.
+export function slotAt(point: { x: number; y: number }, definition: PuzzleDefinition): string | null {
+  const x = point.x + definition.imageWidth / 2, y = point.y + definition.imageHeight / 2;
+  if (x < 0 || y < 0 || x >= definition.imageWidth || y >= definition.imageHeight) return null;
+  return `${Math.floor(y / (definition.imageHeight / definition.rows))}:${Math.floor(x / (definition.imageWidth / definition.columns))}`;
+}
+export function hoveredSlots(group: PieceGroup | undefined, definition: PuzzleDefinition): string[] {
+  return group ? [...new Set(groupPlacements(group, definition).map((pose) => slotAt(pose.center, definition)).filter((id): id is string => id !== null))] : [];
+}
+export function validMatPlacement(group: PieceGroup, definition: PuzzleDefinition): boolean {
+  return group.quarterTurn === 0 && groupPlacements(group, definition).every((pose) => slotAt(pose.center, definition) === pose.pieceId);
 }

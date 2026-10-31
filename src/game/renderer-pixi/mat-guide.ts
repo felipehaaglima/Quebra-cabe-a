@@ -1,32 +1,27 @@
-import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
-import type { PieceGeometry, PuzzleDefinition } from '../core/puzzle/puzzle';
-import type { MatGuideHint } from '../core/puzzle/mat-guide';
-
+import { Container, Graphics } from 'pixi.js';
+import type { PuzzleDefinition } from '../core/puzzle/puzzle';
 const lastTarget = new WeakMap<Container, string>();
 
-export function createMatGuide(texture: Texture, pieces: readonly PieceGeometry[], definition: PuzzleDefinition): Container {
-  const layer = new Container(); layer.label = 'mat-guide'; layer.visible = false; layer.eventMode = 'none';
-  const image = new Sprite(texture);
-  image.position.set(-definition.imageWidth / 2, -definition.imageHeight / 2);
-  image.width = definition.imageWidth; image.height = definition.imageHeight; image.alpha = 0.24;
-  const contours = new Graphics();
-  for (const piece of pieces) contours.poly(piece.polygon.flatMap((point) => [point.x + piece.canonicalOrigin.x - definition.imageWidth / 2, point.y + piece.canonicalOrigin.y - definition.imageHeight / 2])).stroke({ color: 0xe8eedc, width: 1.5, alpha: 0.6 });
-  const target = new Graphics(); target.label = 'guide-target';
-  layer.addChild(image, contours, target);
-  return layer;
+export function createMatGuide(definition: PuzzleDefinition): Container {
+  const layer = new Container(); layer.label = 'mat-guide'; layer.eventMode = 'none';
+  const grid = new Graphics(); grid.label = 'guide-reservations';
+  const width = definition.imageWidth / definition.columns, height = definition.imageHeight / definition.rows;
+  for (let row = 0; row < definition.rows; row++) for (let column = 0; column < definition.columns; column++) {
+    grid.rect(column * width - definition.imageWidth / 2 + 3, row * height - definition.imageHeight / 2 + 3, width - 6, height - 6).fill({ color: 0xf5f1e8, alpha: 0.035 }).stroke({ color: 0xe8e0cc, width: 1.5, alpha: 0.5 });
+  }
+  const target = new Graphics(); target.label = 'guide-target'; layer.addChild(grid, target); return layer;
 }
-
-export function updateMatGuide(world: Container, pieces: readonly PieceGeometry[], definition: PuzzleDefinition, enabled: boolean, members: readonly string[], hint: MatGuideHint) {
+export function updateMatGuide(world: Container, definition: PuzzleDefinition, enabled: boolean, hovered: readonly string[]) {
   const layer = world.getChildByLabel('mat-guide')!;
-  layer.visible = enabled;
-  world.getChildByLabel('mat-caption')!.visible = !enabled;
-  const key = `${enabled}:${hint}:${members.join('|')}`;
+  layer.visible = enabled; world.getChildByLabel('mat-caption')!.visible = !enabled;
+  const key = `${enabled}:${hovered.join('|')}`;
   if (lastTarget.get(layer) === key) return;
   lastTarget.set(layer, key);
-  const target = layer.getChildByLabel('guide-target') as Graphics;
-  target.clear();
+  const target = layer.getChildByLabel('guide-target') as Graphics; target.clear();
   if (!enabled) return;
-  const selected = new Set(members);
-  const color = hint === 'near' || hint === 'aligned' ? 0xc4f0a5 : 0xffdb85;
-  for (const piece of pieces) if (selected.has(piece.id)) target.poly(piece.polygon.flatMap((point) => [point.x + piece.canonicalOrigin.x - definition.imageWidth / 2, point.y + piece.canonicalOrigin.y - definition.imageHeight / 2])).stroke({ color, width: 4, alpha: 0.9 });
+  const width = definition.imageWidth / definition.columns, height = definition.imageHeight / definition.rows;
+  for (const id of hovered) {
+    const [row, column] = id.split(':').map(Number);
+    target.rect(column * width - definition.imageWidth / 2 + 3, row * height - definition.imageHeight / 2 + 3, width - 6, height - 6).fill({ color: 0xffdb85, alpha: 0.28 }).stroke({ color: 0xffdb85, width: 4 });
+  }
 }

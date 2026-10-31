@@ -48,7 +48,7 @@ export function GameHud(p: Props) {
         <label>Qualidade da mesa<select value={p.preferences.quality} onChange={(e) => p.configure({ ...p.preferences, quality: e.target.value as GamePreferences['quality'] })}><option value="auto">Automática</option><option value="low">Econômica</option></select></label>
         <p>Sons e animações são opcionais. O sistema também pode reduzir o movimento.</p>
       </div>
-      <div><details><summary>Ajuda e atalhos</summary><p id="mesa-ajuda">Arraste peças para montar e o fundo para navegar. Dois dedos ampliam e giram. R gira a seleção; setas movem (Shift ajusta fino), Enter encaixa, Escape desmarca e Home centraliza. Bolsas guardam peças soltas. No guia, gire a seleção para 0° e solte próxima do contorno.</p></details>
+      <div><details><summary>Ajuda e atalhos</summary><p id="mesa-ajuda">Arraste peças para montar e o fundo para navegar. Dois dedos ampliam e giram. R gira a seleção; setas movem (Shift ajusta fino), Enter encaixa, Escape desmarca e Home centraliza. Bolsas guardam peças soltas. No guia, tente um espaço reservado: amarelo indica apenas onde você está soltando. Se não encaixar, a peça volta à origem.</p></details>
         <p role="status" aria-label="Salvamento">{p.saveStatus}</p><p>Progresso salvo neste navegador. Limpar seus dados remove o save.</p>
         <button disabled={!p.backupAvailable} onClick={p.backup}>Baixar cópia</button>
         <button disabled={!p.ready || saveError} onClick={() => setConfirmNew(!confirmNew)}>Novo puzzle</button>

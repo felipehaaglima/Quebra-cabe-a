@@ -21,6 +21,7 @@ async function drag(page: Page, from: Vec2, to: Vec2, touch: boolean) {
 async function scene(page: Page) {
   await page.goto('/play');
   await ready(page);
+  await page.getByRole('button', { name: 'Guia no tapete' }).click();
   const canvas = page.locator('canvas');
   const box = (await canvas.boundingBox())!;
   const viewport = { width: box.width, height: box.height };
