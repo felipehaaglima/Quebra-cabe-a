@@ -184,3 +184,9 @@ Eventos são conceituais. O motor de grupos deverá operar com groupId e movimen
 ## Fase 4 — adaptadores de feedback e HUD
 
 `GameHud` separa controles/menus da inicialização de Pixi. `src/game/feedback` contém síntese Web Audio e brilho finito, destruídos ao sair; não escreve economia. `core/puzzle/rewards.ts` aplica regras puras e idempotentes, e `core/preferences.ts` define preferências. O snapshot v3 valida/migra ledger e preferências. O renderer opera sob demanda; efeitos usam RAF apenas durante sua duração, sem ticker permanente.
+
+## F5.1 — Conta e cópias privadas
+
+`src/lib/supabase` isola configuração e cliente SSR server-only; tokens ficam em cookies HttpOnly/SameSite, Secure em produção. Apenas Route Handlers usam o provedor. `/api/auth` envia/verifica OTP e sai da sessão local; `/api/account` informa configuração e usuário verificado por getUser. APIs de cópias derivam owner_id da sessão, revalidam o motor e não expõem credenciais. Mutations verificam Origin/content-type/limite do corpo.
+
+`game/cloud/board.ts` define o contrato sem câmera, preferências de conforto ou economia. `game/cloud/local-copies.ts` importa com validação, confirmação/revisão e arquivamento atômico em IndexedDB v2. O jogo mantém seu autosave local; a nuvem recebe cópias manuais e imutáveis. Não há seleção automática de uma versão sobre outra. Sem configuração, nenhuma chamada a serviço remoto é feita.

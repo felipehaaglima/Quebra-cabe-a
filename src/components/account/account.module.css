@@ -1,0 +1,17 @@
+.page { max-width: 840px; margin: 0 auto; padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); color: #293b31; }
+.page header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+.page h1 { font: 32px Georgia, serif; margin: 12px 0; }
+.page h2 { font: 22px Georgia, serif; margin: 8px 0 16px; }
+.page p { line-height: 1.6; overflow-wrap: anywhere; }
+.page a { display: inline-flex; align-items: center; min-height: 44px; color: #314d3c; }
+.card { padding: 20px; margin-bottom: 20px; border: 1px solid #d7dbce; border-radius: 16px; background: #fffdf7; }
+.page label { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+.page input, .page button { min-height: 44px; border: 1px solid #bdc5b5; border-radius: 10px; padding: 10px 14px; font-size: 16px; }
+.page input { width: 100%; max-width: 380px; background: white; }
+.page button { background: #314d3c; color: white; cursor: pointer; margin: 4px 8px 4px 0; }
+.page button:disabled { opacity: .5; cursor: default; }
+.page ul { list-style: none; padding: 0; }
+.page li { border-top: 1px solid #e2e5da; padding: 16px 0; }
+.page time, .muted { font-size: 14px; color: #5e665c; }
+.notice { padding: 14px; border-radius: 10px; background: #e6ecdF; }
+.confirm { border: 2px solid #b5a471; background: #fcf7e9; padding: 16px; border-radius: 12px; margin: 16px 0; }

@@ -223,3 +223,11 @@ buyPuzzle(userId, puzzleId, requestId):
 A revisão do guia adiciona `model.bagReturns`: pieceId, bagId e grupo original singleton antes da retirada. O leitor migra v3 → v4 com lista vazia; v1/v2 seguem pela cadeia existente. Preferência salva do guia é respeitada; montagens novas começam ligadas. A validação exige origens únicas, bolsa existente, peça solta/visível e grupo original compatível e limitado à mesa.
 
 O retorno inválido/cancelado atualiza grupo, inventário da bolsa e origem pendente antes de um único publish confirmado. Uma retirada seguida de reload mantém a origem; tentativa válida, organização confirmada fora do tapete, guardar novamente ou desligar o guia encerram essa origem. Nova montagem limpa origens e usa guia ligado, mantendo saldo/ledger/preferências de conforto. Nenhum dado de save incompatível é sobrescrito.
+
+## F5.1 — Cópia privada não é economia online
+
+`cloud_saves` armazena o contrato CloudBoard v1, somente montagem: definição imutável, grupos/conexões, bolsas/origens, ordem e guia. A aplicação valida pelo mesmo decodeSave do motor e revalida no restore. Inserções são por usuário autenticado, UUID/timestamp gerados pelo banco, request_id único por dono; cópias não têm update/delete na aplicação. RLS e grants impedem leitura de outro dono e alterações posteriores. O servidor rejeita campos de saldo/câmera/preferências no contrato. Acesso direto do próprio usuário ao PostgREST ainda exige revalidação do motor ao ler; dados de backup jamais remuneram wallet.
+
+Importar requer confirmação e revisão local: uma transação IndexedDB v2 arquiva o save anterior antes de gravar o novo. Diferença de revisão entre abas ou save incompatível bloqueia a operação. Conexões importadas são registradas no ledger local a zero; saldo/direitos online não são aceitos de um cliente. Restaurar histórico local une o ledger por chave sem diminuir saldo nem permitir nova recompensa repetida, preservando conforto atual. Câmera não é sincronizada.
+
+A migração executável está em supabase/migrations. Exemplos SQL anteriores neste documento continuam conceituais para catálogo/economia/galeria posteriores; não são tabelas criadas pela F5.1. Projeto e Auth/SMTP hospedados ainda precisam ser configurados pelo dono.

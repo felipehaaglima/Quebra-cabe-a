@@ -7,7 +7,7 @@ export function Welcome() {
       <a className="skip-link" href="#conteudo">Pular para o conteúdo</a>
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-6 sm:px-10">
         <Link className="brand" href="/" aria-label="Quebra-cabeça — início"><span aria-hidden="true">✣</span> quebra-cabeça</Link>
-        <span className="version">PRIMEIRAS PEÇAS · 0.1</span>
+        <Link href="/account" className="account-link">Sua conta</Link>
       </header>
       <main id="conteudo" className="mx-auto w-full max-w-6xl px-6 sm:px-10">
         <section className="hero" aria-labelledby="titulo">

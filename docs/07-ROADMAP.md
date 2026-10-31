@@ -188,6 +188,10 @@ Evidências: [validação da Fase 4](10-VALIDACAO-FASE-4.md).
 
 ### F5.1 — Supabase
 
+**Código preparado; ativação externa pendente:** entrada por código de e-mail, sessão em cookie HttpOnly via Route Handlers, cópias privadas imutáveis, importação revisada e histórico local transacional. Migração Postgres com profiles/cloud_saves, RLS por dono e bucket Storage privado. Servidor valida snapshots; câmera, preferências de conforto e moedas ficam locais. A sincronização é manual nesta primeira entrega.
+
+Sem projeto configurado, a conta informa indisponibilidade e o jogo local continua. O usuário confirmou que ainda não tem projeto Supabase; nenhum serviço externo/pago foi criado. A ativação e os testes reais de Auth/e-mail, Storage e dois aparelhos estão em [supabase/README.md](../supabase/README.md).
+
 - Criar projeto e migrações SQL; Auth, Postgres, Storage; políticas RLS.
 - Separar ambientes preview/produção e segredos.
 - Adicionar importação de save local após login, com validação.

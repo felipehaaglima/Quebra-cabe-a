@@ -4,7 +4,8 @@ import { decodeSave, definitionKey, type LocalSave, type SavePayload } from './s
 
 export class PuzzleDatabase extends Dexie {
   saves!: Table<LocalSave, string>;
-  constructor(name = 'quebra-cabeca-local') { super(name); this.version(1).stores({ saves: 'puzzleId' }); }
+  archives!: Table<{ id?: number; puzzleId: string; savedAt: string; save: LocalSave }, number>;
+  constructor(name = 'quebra-cabeca-local') { super(name); this.version(1).stores({ saves: 'puzzleId' }); this.version(2).stores({ saves: 'puzzleId', archives: '++id,puzzleId,savedAt' }); }
 }
 
 export class LocalSaveSession {

@@ -1,6 +1,6 @@
 # Quebra-cabeça — jogo cozy, mobile-first
 
-> **Status em 31/10/2026:** Fase 4 implementada, com validação física do MVP pendente: mesa navegável com escolha de 24 ou 48 peças recortadas do puzzle Lago sereno. **Puzzle de 24/48 peças com interface compacta, bolsas, autosave, sons opcionais, celebração e moedas locais.**
+> **Status em 31/10/2026:** Fase 5.1 preparada, com ativação Supabase pendente: mesa navegável com escolha de 24 ou 48 peças recortadas do puzzle Lago sereno. **Puzzle de 24/48 peças com interface compacta, bolsas, autosave, sons opcionais, celebração e moedas locais.**
 
 Um jogo web de montar quebra-cabeças em uma mesa virtual acolhedora. O jogador navega por uma mesa grande, movimenta e gira peças, usa um tapete de montagem, organiza peças em sacolas etiquetadas, ganha moedas por progresso legítimo e desbloqueia novos puzzles. A experiência deve funcionar primeiro no celular e se adaptar elegantemente ao desktop.
 
@@ -39,7 +39,7 @@ Um jogo web de montar quebra-cabeças em uma mesa virtual acolhedora. O jogador 
 - **Estilos/componentes:** Tailwind CSS + componentes acessíveis; ícones Lucide.
 - **Estado local do jogo:** controladores TypeScript independentes de React/Pixi; Zustand permanece uma opção futura.
 - **Validação e testes:** Zod, Vitest, Testing Library, Playwright (mobile/desktop).
-- **Contas e backend futuro:** Supabase Auth, Postgres, Storage e Realtime; APIs seguras via Route Handlers da Next.js.
+- **Contas preparadas (F5.1):** Supabase Auth/Postgres, Storage privado e APIs via Route Handlers; ativação externa pendente. Realtime permanece futuro.
 - **Deploy:** GitHub → Vercel com Preview Deployments por PR e produção pela main.
 - **IA de imagens no futuro:** API de geração de imagens acionada **somente no servidor**, com limites e controle de custo.
 - **Google Drive no futuro:** exportação/sincronização opcional de backups, sem torná-lo banco principal.
@@ -58,7 +58,7 @@ Um jogo web de montar quebra-cabeças em uma mesa virtual acolhedora. O jogador 
 
 ## Desenvolvimento local
 
-Use Node.js 24 LTS (`nvm use`, se disponível) e npm. Nenhuma variável de ambiente, conta ou serviço externo é necessário.
+Use Node.js 24 LTS (`nvm use`, se disponível) e npm. O modo local não exige variáveis ou serviços externos. Contas e cópias privadas dependem da configuração opcional do Supabase; veja [ativação da F5.1](supabase/README.md).
 
 ```sh
 npm ci
@@ -94,11 +94,17 @@ Playwright inicia o servidor de produção automaticamente; execute o build ante
 
 Para servir manualmente o build: `npm run start`. `npm run test:watch` executa os testes de componentes em modo interativo.
 
-A rota fica em `src/app`; a landing, em `src/components/landing`; a interface da mesa, em `src/components/game`. As transformações puras da câmera ficam em `src/game/core/camera`, a entrada em `src/game/input` e o renderer em `src/game/renderer-pixi`, conforme [arquitetura](docs/03-ARQUITETURA.md). PixiJS é carregado apenas no navegador. A câmera não depende de PixiJS, React ou DOM; nenhum serviço de backend foi adicionado.
+A rota fica em `src/app`; a landing, em `src/components/landing`; a interface da mesa, em `src/components/game`. As transformações puras da câmera ficam em `src/game/core/camera`, a entrada em `src/game/input` e o renderer em `src/game/renderer-pixi`, conforme [arquitetura](docs/03-ARQUITETURA.md). PixiJS é carregado apenas no navegador. A câmera não depende de PixiJS, React ou DOM. As APIs de conta são opcionais e ficam isoladas em src/app/api e src/lib/supabase.
+
+## Contas e cópias privadas — F5.1
+
+**Sua conta** no início (ou em Ferramentas) oferece entrada por código de e-mail quando o servidor está configurado. É possível guardar cópias privadas de 24/48 peças e restaurá-las em outro aparelho com confirmação. A troca arquiva a montagem anterior no histórico local. A sincronização é manual nesta fase: novos movimentos exigem guardar outra cópia.
+
+Câmera, preferências de conforto e moedas ficam no aparelho; backups não criam saldo online. O jogo continua sem login. Sem Supabase configurado, a tela informa a indisponibilidade e não simula uma conta conectada. Migrações, RLS, variáveis e aceites pendentes estão em [supabase/README.md](supabase/README.md).
 
 ## Próximos passos
 
-A Fase 0.2 conecta a Vercel após o primeiro build validado e prepara assets licenciados. A Fase 1.1 entrega o canvas, mesa e câmera; a Fase 1.2 acrescenta pinça, rotação por gesto e roda do mouse. A Fase 2.1 entrega a definição determinística, recortes e distribuição inicial de 24 peças. A Fase 2.2 acrescenta seleção, arraste e giro das peças, preservando a navegação da câmera. A Fase 2.3 acrescenta encaixes, grupos rígidos e conclusão do puzzle de 24 peças. A Fase 2.4 acrescenta escolha de 24/48 peças, aproximação da seleção e ajustes de toque/renderização. A Fase 2.5 implementa o guia opcional de posicionamento no tapete. As Fases 3.1 e 3.2 entregam bolsas e autosave local. A soltura passa a considerar a posição final do ponteiro, corrigindo o ajuste no guia quando falta o último evento de movimento. A Fase 4 acrescenta interface compacta, efeitos, preferências e moedas. O próximo marco é validar o MVP em Chrome Android/Safari iOS reais e conferir o deploy Vercel; depois vêm contas e catálogo na Fase 5. Testes em dispositivos reais de iOS/Android continuam necessários quando houver gestos e canvas.
+A Fase 0.2 conecta a Vercel após o primeiro build validado e prepara assets licenciados. A Fase 1.1 entrega o canvas, mesa e câmera; a Fase 1.2 acrescenta pinça, rotação por gesto e roda do mouse. A Fase 2.1 entrega a definição determinística, recortes e distribuição inicial de 24 peças. A Fase 2.2 acrescenta seleção, arraste e giro das peças, preservando a navegação da câmera. A Fase 2.3 acrescenta encaixes, grupos rígidos e conclusão do puzzle de 24 peças. A Fase 2.4 acrescenta escolha de 24/48 peças, aproximação da seleção e ajustes de toque/renderização. A Fase 2.5 implementa o guia opcional de posicionamento no tapete. As Fases 3.1 e 3.2 entregam bolsas e autosave local. A soltura passa a considerar a posição final do ponteiro, corrigindo o ajuste no guia quando falta o último evento de movimento. A Fase 4 acrescenta interface compacta, efeitos, preferências e moedas. O próximo marco é validar o MVP em Chrome Android/Safari iOS reais e conferir o deploy Vercel; a base de contas/cópias da F5.1 já está preparada e requer ativação Supabase; depois vem o catálogo na F5.2. Testes em dispositivos reais de iOS/Android continuam necessários quando houver gestos e canvas.
 
 ## Organização de entregas
 
