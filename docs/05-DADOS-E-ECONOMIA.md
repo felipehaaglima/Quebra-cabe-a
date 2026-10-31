@@ -15,13 +15,17 @@ Persistência no navegador via **IndexedDB (Dexie)**:
 - Implementar migrações **schemaVersion**; se falhar, preservar backup bruto e informar em vez de sobrescrever.
 - Modo privado, limpeza de dados do navegador e outros dispositivos podem eliminar o save local. Informar isso ao usuário.
 
-### Contrato implementado nas F3.1/F3.2
+### Contrato implementado até a F4.2
 
-O contrato executável está em `src/game/persistence/snapshot.ts`. O banco `quebra-cabeca-local` usa a tabela `saves`, chave `puzzleId`: uma montagem por definição de 24/48 peças. `definitionKey` identifica exatamente a definição/seed/asset. O snapshot v2 contém revisão, data, modelo (grupos, conexões, bolsas, ordem, guia, conclusão e saldo local reservado) e câmera (centro, zoom relativo e ângulo). Não há perfil ou sessão online.
+O contrato executável está em `src/game/persistence/snapshot.ts`. O banco `quebra-cabeca-local` usa a tabela `saves`, chave `puzzleId`: uma montagem por definição de 24/48 peças. `definitionKey` identifica definição/seed/asset. O snapshot v3 contém revisão, data, modelo (grupos, conexões, bolsas, ordem, guia, conclusão, preferências, saldo e ledger) e câmera (centro, zoom relativo e ângulo). Não há perfil online.
 
-O leitor migra v1 para v2 adicionando os campos ausentes de preferência/conclusão/saldo. Antes de restaurar ou gravar, valida IDs únicos, inventário completo, grupos conexos, ledger de conexões canônicas, bolsas somente com peças soltas e limites da mesa. Versões futuras, dados corrompidos e definições diferentes são preservados sem sobrescrita. A revisão é conferida dentro da transação IndexedDB: outra aba que avançou o save bloqueia a gravação antiga.
+O leitor migra v1 → v2 → v3. Na migração, conexões e conclusão anteriores são marcadas no ledger com valor zero, preservando a montagem sem crédito retroativo. O saldo reservado da v2 era zero; dados legados incompatíveis permanecem bloqueados e exportáveis. V3 valida o ledger sem chaves repetidas, somente conexões canônicas/bônus permitidos, valores configurados e saldo igual à soma das entradas. Conexões atuais precisam de registro de recompensa. Guardar/retirar peças ou usar o guia sem novas conexões não paga moedas.
 
-Ações confirmadas salvam imediatamente; câmera usa debounce de 700 ms. Durante arraste, o snapshot usa a última posição confirmada; pointercancel não vira progresso. `pagehide` e mudança de visibilidade tentam flush, sem garantir execução na interrupção abrupta do navegador. O status informa erros de armazenamento/conflito. Backup JSON exporta o último registro disponível, inclusive bruto incompatível; importação é futura. Limpeza de dados do navegador remove o save. Moedas continuam em zero até a F4.2.
+A F4.2 usa +1 por conexão e bônus configurável (+20 para 24, +30 para 48); máximos 58/112 por definição. `Novo puzzle` preserva ledger e saldo, impedindo farming por restart. Câmera, preferências e bolsas não alteram recompensas. O saldo é demonstrativo por puzzle, não uma wallet online transferível.
+
+Antes de restaurar/gravar, valida IDs únicos, inventário completo, grupos conexos, conexões canônicas, bolsas somente com peças soltas e limites. Versões futuras, dados corrompidos e definições diferentes são preservados. A revisão é conferida dentro da transação IndexedDB: outra aba que avançou o save bloqueia a gravação antiga.
+
+Ações confirmadas salvam imediatamente; câmera usa debounce de 700 ms. Durante arraste, o snapshot usa a última posição confirmada; pointercancel não vira progresso. `pagehide`/visibilidade tentam flush, sem garantia em interrupção abrupta. O status informa erros e backup JSON exporta o último registro disponível, inclusive bruto incompatível. Importação/nuvem são futuras; limpar dados do navegador remove o save.
 
 ## 2. Estratégia de evolução da nuvem
 

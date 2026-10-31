@@ -1,3 +1,4 @@
+import { ready } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { DEMO, DEMO48, generatePieces, distributePieces } from '../../src/game/core/puzzle/puzzle';
 import { canonicalCenter } from '../../src/game/core/puzzle/groups';
@@ -15,7 +16,7 @@ async function drag(page: Page, start: Vec2, end: Vec2, mobile: boolean) {
 for (const definition of [DEMO, DEMO48]) test(`bolsas e restauração de ${definition.rows * definition.columns} peças`, async ({ page, isMobile }, testInfo) => {
   const count = definition.rows * definition.columns;
   await page.goto(count === 48 ? '/play?pieces=48' : '/play');
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled(); await saved(page);
+  await ready(page); await saved(page);
   const canvas = page.locator('canvas'); const box = (await canvas.boundingBox())!;
   const camera = centerCamera({ width: box.width, height: box.height });
   const point = (p: Vec2) => { const v = worldToScreen(p, camera, { width: box.width, height: box.height }); return { x: v.x + box.x, y: v.y + box.y }; };
@@ -34,7 +35,7 @@ for (const definition of [DEMO, DEMO48]) test(`bolsas e restauração de ${defin
   await panel.getByRole('button', { name: 'Azuis (1)' }).click();
   await page.screenshot({ path: testInfo.outputPath('bolsas.png'), fullPage: true });
   await panel.getByRole('button', { name: 'Fechar bolsas' }).click(); await saved(page);
-  await page.reload(); await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await page.reload(); await ready(page);
   await expect(canvas).toHaveAttribute('data-piece-count', String(count));
   await expect(canvas).toHaveAttribute('data-visible-pieces', String(count - 1));
   await page.getByRole('button', { name: 'Bolsas', exact: true }).click();
@@ -46,14 +47,14 @@ for (const definition of [DEMO, DEMO48]) test(`bolsas e restauração de ${defin
   await page.getByRole('button', { name: 'Guia no tapete' }).click();
   await page.getByRole('button', { name: 'Ampliar zoom' }).click(); await page.getByRole('button', { name: 'Girar 90°', exact: true }).click();
   await expect(page.getByLabel('Visão da mesa')).toHaveText('125% · 90°'); await saved(page);
-  await page.reload(); await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await page.reload(); await ready(page);
   await expect(page.getByRole('button', { name: 'Guia no tapete' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByLabel('Visão da mesa')).toHaveText('125% · 90°');
   await expect(canvas).toHaveAttribute('data-visible-pieces', String(count));
 });
 
 test('soltura final sem último movimento ajusta no tapete e persiste', async ({ page, isMobile }) => {
-  await page.goto('/play'); await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await page.goto('/play'); await ready(page);
   await page.getByRole('button', { name: 'Guia no tapete' }).click();
   await page.getByLabel('Selecionar peça').selectOption('0:0');
   const initial = distributePieces(generatePieces(DEMO), DEMO.seed)[0];
@@ -72,13 +73,13 @@ test('soltura final sem último movimento ajusta no tapete e persiste', async ({
     await canvas.dispatchEvent('pointerup', { pointerId: 1, clientX: end.x, clientY: end.y, button: 0 }); await page.mouse.up();
   }
   await expect(page.getByLabel('Ajuda do tapete')).toContainText('Seleção alinhada'); await saved(page);
-  await page.reload(); await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await page.reload(); await ready(page);
   await page.getByLabel('Selecionar peça').selectOption('0:0');
   await expect(page.getByLabel('Ajuda do tapete')).toContainText('Seleção alinhada');
 });
 
 test('preserva save incompatível e oferece backup sem sobrescrever', async ({ page }) => {
-  await page.goto('/play'); await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled(); await saved(page);
+  await page.goto('/play'); await ready(page); await saved(page);
   await page.evaluate(async () => {
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('quebra-cabeca-local');
@@ -90,11 +91,11 @@ test('preserva save incompatível e oferece backup sem sobrescrever', async ({ p
       transaction.oncomplete = () => resolve(); transaction.onerror = () => reject(transaction.error);
     }); database.close();
   });
-  await page.reload(); await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await page.reload(); await ready(page);
   await expect(page.getByLabel('Salvamento')).toContainText('Dados existentes foram preservados');
-  const downloadPromise = page.waitForEvent('download'); await page.getByRole('button', { name: 'Baixar cópia' }).click();
+  const downloadPromise = page.waitForEvent('download'); await page.getByRole('button', { name: 'Baixar cópia' }).first().click();
   const download = await downloadPromise; expect(download.suggestedFilename()).toContain('backup.json');
   await page.getByRole('button', { name: 'Guia no tapete' }).click();
   await expect(page.getByLabel('Salvamento')).toContainText('salvamento desativado');
-  await page.reload(); await expect(page.getByLabel('Salvamento')).toContainText('Dados existentes foram preservados');
+  await page.reload(); await ready(page); await expect(page.getByLabel('Salvamento')).toContainText('Dados existentes foram preservados');
 });

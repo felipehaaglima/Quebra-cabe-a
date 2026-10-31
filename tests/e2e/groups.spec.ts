@@ -1,3 +1,4 @@
+import { ready } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { DEMO, DEMO48, distributePieces, generatePieces } from '../../src/game/core/puzzle/puzzle';
 import { canonicalCenter } from '../../src/game/core/puzzle/groups';
@@ -6,7 +7,7 @@ import { centerCamera, worldToScreen, type Vec2 } from '../../src/game/core/came
 const initial = distributePieces(generatePieces(DEMO), DEMO.seed);
 async function setup(page: Page, count = 24) {
   await page.goto(count === 48 ? '/play?pieces=48' : '/play');
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   const canvas = page.locator('canvas');
   const box = (await canvas.boundingBox())!;
   const viewport = { width: box.width, height: box.height };
@@ -74,6 +75,10 @@ for (const definition of [DEMO, DEMO48]) test(`monta as ${definition.rows * defi
     if (index > 0) await expect(page.getByRole('button', { name: 'Girar grupo' })).toBeEnabled();
   }
   await expect(page.getByLabel('Progresso do puzzle')).toHaveText('Puzzle completo! Você pode alinhar a obra ao tapete.');
+  const earned = count === 24 ? 58 : 112;
+  await expect(page.getByLabel('Moedas locais')).toHaveText(`◉ ${earned}`);
+  await expect(page.getByRole('button', { name: 'Continuar olhando' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continuar olhando' }).click();
   await expect(page.getByRole('button', { name: 'Alinhar obra' })).toBeEnabled();
   await page.getByRole('button', { name: 'Alinhar obra' }).click();
   const complete = await canvas.screenshot();
@@ -88,6 +93,8 @@ for (const definition of [DEMO, DEMO48]) test(`monta as ${definition.rows * defi
   await expect(canvas).toHaveAttribute('data-piece-count', String(count));
   expect(errors).toEqual([]);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
+  await expect(page.getByLabel('Moedas locais')).toHaveText(`◉ ${earned}`);
+  await expect(page.getByRole('button', { name: 'Continuar olhando' })).toHaveCount(0);
   await expect(page.getByLabel('Progresso do puzzle')).toContainText('Puzzle completo!');
 });

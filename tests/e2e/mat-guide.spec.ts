@@ -1,3 +1,4 @@
+import { ready } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { DEMO, DEMO48, generatePieces, distributePieces } from '../../src/game/core/puzzle/puzzle';
 import { canonicalCenter } from '../../src/game/core/puzzle/groups';
@@ -25,7 +26,7 @@ for (const definition of [DEMO, DEMO48]) test(`guia opcional com ${definition.ro
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(count === 48 ? '/play?pieces=48' : '/play');
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   const canvas = page.locator('canvas');
   const toggle = page.getByRole('button', { name: 'Guia no tapete' });
   const hint = page.getByLabel('Ajuda do tapete');
@@ -85,7 +86,7 @@ for (const definition of [DEMO, DEMO48]) test(`guia opcional com ${definition.ro
   await expect(canvas).toHaveAttribute('data-piece-count', String(count));
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(progress).toHaveText(`1 de ${expected} encaixes · ${count - 1} grupos`);
   expect(errors).toEqual([]);

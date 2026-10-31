@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { GameHud } from './game-hud';
+import { defaultPreferences } from '@/game/core/preferences';
+import { GameAudio } from '@/game/feedback/audio';
 import { CameraController, type CameraAction } from '@/game/input/camera-controller';
 import { fitZoom } from '@/game/core/camera/camera';
 import styles from './game.module.css';
@@ -19,7 +21,11 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
   const host = useRef<HTMLDivElement>(null);
   const controller = useRef<CameraController | null>(null);
   const pieceController = useRef<PieceController | null>(null);
+  const effects = useRef<{ stop: () => void; align: () => void } | null>(null);
   const saveSession = useRef<LocalSaveSession | null>(null);
+  const [preferences, setPreferences] = useState(defaultPreferences);
+  const [balance, setBalance] = useState(0);
+  const [celebration, setCelebration] = useState('');
   const [liveModel, setLiveModel] = useState<PieceController | null>(null);
   const [backupAvailable, setBackupAvailable] = useState(false);
   const [saveStatus, setSaveStatus] = useState('Carregando progresso…');
@@ -46,6 +52,15 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
       const loaded = await persistence.load();
       if (cancelled) { await persistence.close(); return; }
       const app = new Application();
+      const audio = new GameAudio(loaded?.model.preferences ?? defaultPreferences());
+      const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+      let glow: import('@/game/feedback/visual').PuzzleGlow | undefined;
+      const unlock = () => audio.unlock();
+      const silence = () => audio.stop();
+      window.addEventListener('pointerdown', unlock, { capture: true }); window.addEventListener('keydown', unlock, { capture: true });
+      window.addEventListener('blur', silence);
+      const motionChange = () => { if (media.matches) glow?.clear(); };
+      media.addEventListener('change', motionChange);
       let saving = false;
       let flushOnHide: (() => void) | undefined;
       let texture: import('pixi.js').Texture | undefined;
@@ -56,6 +71,8 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
         if (released) return;
         released = true;
         saving = false;
+        audio.destroy(); glow?.destroy(); effects.current = null;
+        window.removeEventListener('pointerdown', unlock, { capture: true }); window.removeEventListener('keydown', unlock, { capture: true }); window.removeEventListener('blur', silence); media.removeEventListener('change', motionChange);
         observer?.disconnect(); input?.destroy(); pieceController.current = null;
         if (flushOnHide) { window.removeEventListener('pagehide', flushOnHide); document.removeEventListener('visibilitychange', flushOnHide); }
         void persistence.close();
@@ -66,7 +83,7 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
         texture?.destroy(true);
       };
       try {
-        await app.init({ background: '#c3a17d', antialias: true, autoStart: false, preference: ['webgl'], resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true, width: element.clientWidth, height: element.clientHeight });
+        await app.init({ background: '#c3a17d', antialias: true, autoStart: false, preference: ['webgl'], resolution: loaded?.model.preferences.quality === 'low' ? 1 : Math.min(window.devicePixelRatio || 1, 2), autoDensity: true, width: element.clientWidth, height: element.clientHeight });
         if (cancelled) { release(); return; }
         texture = await loadDemoTexture();
         if (cancelled) { release(); return; }
@@ -74,6 +91,9 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
         const initialPlacements = loaded ? loaded.model.state.groups.flatMap((group) => groupPlacements(group, definition)) : distributePieces(pieces, definition.seed);
         const world = createWorld(texture, pieces, initialPlacements, definition, app.renderer, loaded?.model.bags ?? initialBags());
         app.stage.addChild(world);
+        const { PuzzleGlow } = await import('@/game/feedback/visual');
+        if (cancelled) { release(); return; }
+        glow = new PuzzleGlow(app, world);
         const canvas = app.canvas;
         canvas.tabIndex = 0;
         canvas.dataset.pieceCount = String(world.getChildByLabel('pieces')!.children.length);
@@ -82,6 +102,11 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
         element.appendChild(canvas);
         let viewport = { width: element.clientWidth, height: element.clientHeight };
         const pieceInput: PieceController = new PieceController(pieces, initialPlacements, definition, (placements, selectedId, info) => {
+          setPreferences((previous) => previous.muted === info.preferences.muted && previous.volume === info.preferences.volume && previous.reducedMotion === info.preferences.reducedMotion && previous.quality === info.preferences.quality ? previous : { ...info.preferences });
+          setBalance(info.balance); audio.configure(info.preferences);
+          const resolution = info.preferences.quality === 'low' ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+          if (app.renderer.resolution !== resolution) app.renderer.resize(viewport.width, viewport.height, resolution);
+          if (info.preferences.reducedMotion || info.preferences.quality === 'low') glow?.clear();
           updatePieces(world, placements, selectedId, info.selectedMembers, info.hiddenIds);
           updateBags(world.getChildByLabel('bags')!, info.bags, info.dropBagId);
           canvas.dataset.visiblePieces = String(placements.length - info.hiddenIds.length);
@@ -93,8 +118,17 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
           setSelection((previous) => previous.id === selectedId && previous.quarterTurn === quarterTurn && previous.size === info.selectedMembers.length ? previous : { id: selectedId, quarterTurn, size: info.selectedMembers.length });
           setProgress((previous) => previous.connections === info.connections && previous.groupCount === info.groupCount && previous.completed === info.completed ? previous : { connections: info.connections, expected: info.expected, groupCount: info.groupCount, completed: info.completed });
           if (saving && input && !info.transient) persistence.schedule({ model: pieceInput.exportModel(), camera: input.viewSnapshot() }, true);
+        }, (event, earned = 0) => {
+          audio.play(event);
+          if (earned && event !== 'complete') audio.play('coin');
+          if (event === 'complete') setCelebration(`Obra concluída! ${earned ? `+${earned} moedas nesta jogada.` : 'Esta obra já recebeu suas recompensas.'}`);
+          if ((event === 'snap' || event === 'complete') && !media.matches && !pieceInput.preferences.reducedMotion && pieceInput.preferences.quality !== 'low') {
+            const pose = pieceInput.placements.find((item) => item.pieceId === pieceInput.selectedId);
+            if (pose) glow?.show(event === 'complete' ? pieceInput.state.groups[0].translation : pose.center, event === 'complete');
+          }
         });
         if (loaded) pieceInput.restore(loaded.model);
+        effects.current = { stop: () => glow?.clear(), align: () => { if (!media.matches && !pieceInput.preferences.reducedMotion && pieceInput.preferences.quality !== 'low') glow?.show({ x: 0, y: 0 }, true); } };
         pieceController.current = pieceInput; setLiveModel(pieceInput);
         input = new CameraController(canvas, viewport, (camera) => {
           pieceInput.setViewZoom(camera.zoom);
@@ -136,56 +170,23 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
 
   function act(action: CameraAction) { controller.current?.act(action); }
 
-  return (
-    <main className={styles.game}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.back}>← Início</Link>
-        <div><h1>Mesa tranquila</h1><p>Lago sereno · {count} peças</p></div>
-        <output className={styles.view} aria-label="Visão da mesa">{view}</output>
-      </header>
-      <div className={styles.stage} ref={host} data-testid="mesa">
-        <button className={styles.bagsToggle} disabled={!ready} onClick={() => pieceController.current?.openBags()}>Bolsas</button>
-        <button className={styles.guideToggle} disabled={!ready} aria-pressed={guide.enabled} onClick={() => pieceController.current?.setGuideEnabled(!guide.enabled)}>Guia no tapete</button>
-        {!ready && <div className={styles.loading}><p role={failed ? 'alert' : 'status'}>{status}</p>{failed && <button onClick={() => { setFailed(false); setStatus('Preparando sua mesa…'); setAttempt((value) => value + 1); }}>Tentar novamente</button>}</div>}
-      </div>
-      <details className={styles.reference}>
-        <summary>Ver imagem</summary>
-        <figure><Image src="/puzzles/demo/lago-sereno-v1.svg" width={240} height={180} alt="Referência do puzzle: lago verde entre montanhas, com árvores, sol e um barco à vela." unoptimized /><figcaption>Lago sereno · {count} peças</figcaption></figure>
-      </details>
-      <div className={styles.bottom}>
-        <p id="mesa-ajuda">Arraste uma peça para movê-la; arraste o fundo para navegar. Dois dedos ampliam e giram a mesa. Solte vizinhas alinhadas para encaixar. R gira a seleção; setas movem (Shift ajusta fino), Enter tenta encaixar e Escape desmarca. Toque numa bolsa para abrir; arraste peças soltas para guardar.</p>
-        <div className={styles.saveStatus}><span role="status" aria-label="Salvamento">{saveStatus}</span><button disabled={!backupAvailable} onClick={() => saveSession.current?.downloadBackup()}>Baixar cópia</button></div>
-        <p className={styles.guideHint} role="status" aria-label="Ajuda do tapete">{bagView.notice || (!guide.enabled ? 'Guia desligado: ative para ver a referência no tapete.' : {
-          none: 'Guia ligado: selecione uma peça ou grupo.',
-          'wrong-orientation': 'Gire a seleção para 0° para ajustar ao tapete.',
-          far: 'Siga os contornos no tapete e aproxime a seleção.',
-          near: 'Perto do lugar certo. Solte ou use Encaixar.',
-          aligned: 'Seleção alinhada. Você pode movê-la livremente.',
-        }[guide.hint])}</p>
-        <p className={styles.progress} role="status" aria-label="Progresso do puzzle">{progress.completed ? 'Puzzle completo! Você pode alinhar a obra ao tapete.' : `${progress.connections} de ${progress.expected} encaixes · ${progress.groupCount} grupos`}</p>
-        <div className={styles.selection}>
-          <select aria-label="Selecionar peça" disabled={!ready} value={selection.id ?? ''} onChange={(event) => pieceController.current?.select(event.target.value || null)}>
-            <option value="">Selecionar peça</option>
-            {pieceOptions.map((item) => <option disabled={bagView.hidden.includes(item.id)} key={item.id} value={item.id}>{item.name}</option>)}
-          </select>
-          <button disabled={!ready || !selection.id} onClick={() => pieceController.current?.rotate()}>{selection.size > 1 ? 'Girar grupo' : 'Girar peça'}</button>
-          <output aria-label="Orientação da peça">{selection.id ? `${selection.quarterTurn * 90}°` : '—'}</output>
-        </div>
-        <nav className={styles.controls} aria-label="Controles da mesa">
-          <button disabled={!ready} onClick={() => act('zoom-out')} aria-label="Diminuir zoom">−</button>
-          <button disabled={!ready} onClick={() => act('zoom-in')} aria-label="Ampliar zoom">+</button>
-          <button disabled={!ready} onClick={() => act('rotate')}>Girar 90°</button>
-          <button disabled={!ready} onClick={() => act('center')}>Centralizar</button>
-          <button disabled={!ready || !selection.id} onClick={() => pieceController.current?.snap(controller.current?.camera.zoom ?? 1)}>Encaixar</button>
-          <button disabled={!ready || !selection.id} onClick={() => {
-            const pose = pieceController.current?.placements.find((item) => item.pieceId === selection.id);
-            if (pose) controller.current?.focus(pose.center);
-          }}>Ver seleção</button>
-          <button disabled={!progress.completed} onClick={() => pieceController.current?.alignCompleted()}>Alinhar obra</button>
-        </nav>
-      </div>
-      {liveModel && <BagPanel model={liveModel} bags={bagView.bags} open={bagView.open} activeId={bagView.activeId} definition={definition} locate={(bag) => { pieceController.current?.closeBags(); controller.current?.focus(bag.center); }} />}
-      <p className="sr-only" role="status">{ready ? status : ''}</p>
-    </main>
-  );
+  const hint = bagView.notice || (!guide.enabled ? '' : {
+    none: 'Guia ligado: selecione uma peça ou grupo.',
+    'wrong-orientation': 'Gire a seleção para 0° para ajustar ao tapete.',
+    far: 'Siga os contornos no tapete e aproxime a seleção.',
+    near: 'Perto do lugar certo. Solte ou use Encaixar.',
+    aligned: 'Seleção alinhada. Você pode movê-la livremente.',
+  }[guide.hint]);
+  return <main className={styles.game}>
+    <header className={styles.header}><Link href="/" className={styles.back}>← Início</Link><div><h1>Mesa tranquila</h1><p>Lago sereno · {count} peças</p></div><span className={styles.saveDot} title={saveStatus} aria-label={saveStatus.startsWith('Não foi') ? 'Falha no progresso' : 'Progresso automático'}>●</span></header>
+    <div className={styles.stage} ref={host} data-testid="mesa">
+      {!ready && <div className={styles.loading}><p role={failed ? 'alert' : 'status'}>{status}</p>{failed && <button onClick={() => { setFailed(false); setStatus('Preparando sua mesa…'); setAttempt((value) => value + 1); }}>Tentar novamente</button>}</div>}
+      {celebration && <aside className={styles.celebration} aria-label="Conclusão"><p role="status">{celebration}</p><button onClick={() => { pieceController.current?.alignCompleted(); controller.current?.act('center'); effects.current?.align(); }}>Alinhar no tapete</button><button onClick={() => { effects.current?.stop(); setCelebration(''); }}>Continuar olhando</button></aside>}
+    </div>
+    <GameHud ready={ready} count={count} view={view} saveStatus={saveStatus} backupAvailable={backupAvailable} progress={progress} selection={selection} options={pieceOptions} hidden={bagView.hidden} guide={guide.enabled} hint={hint} balance={balance} preferences={preferences}
+      act={act} bags={() => pieceController.current?.openBags()} toggleGuide={() => pieceController.current?.setGuideEnabled(!guide.enabled)} select={(id) => pieceController.current?.select(id)} rotate={() => pieceController.current?.rotate()} snap={() => pieceController.current?.snap(controller.current?.camera.zoom ?? 1)}
+      focus={() => { const pose = pieceController.current?.placements.find((item) => item.pieceId === selection.id); if (pose) controller.current?.focus(pose.center); }} align={() => { pieceController.current?.alignCompleted(); effects.current?.align(); }} backup={() => saveSession.current?.downloadBackup()} configure={(value) => pieceController.current?.setPreferences(value)} restart={() => { effects.current?.stop(); pieceController.current?.newPuzzle(); controller.current?.act('center'); setCelebration(''); }} />
+    {liveModel && <BagPanel model={liveModel} bags={bagView.bags} open={bagView.open} activeId={bagView.activeId} definition={definition} locate={(bag) => { pieceController.current?.closeBags(); controller.current?.focus(bag.center); }} />}
+    <p className="sr-only" role="status">{ready ? status : ''}</p>
+  </main>;
 }

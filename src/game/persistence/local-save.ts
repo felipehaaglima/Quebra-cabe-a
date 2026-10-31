@@ -50,7 +50,7 @@ export class LocalSaveSession {
       if (hash === this.hash) { this.status('Salvo neste navegador.'); return; }
       this.status('Salvando neste navegador…');
       try {
-        const candidate: LocalSave = { ...payload, schemaVersion: 2, puzzleId: this.definition.id, definitionKey: definitionKey(this.definition), revision: this.revision + 1, savedAt: new Date().toISOString() };
+        const candidate: LocalSave = { ...payload, schemaVersion: 3, puzzleId: this.definition.id, definitionKey: definitionKey(this.definition), revision: this.revision + 1, savedAt: new Date().toISOString() };
         decodeSave(candidate, this.definition);
         await this.database.transaction('rw', this.database.saves, async () => {
           const current = await this.database.saves.get(this.definition.id);

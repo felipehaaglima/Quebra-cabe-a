@@ -16,7 +16,7 @@ export function Welcome() {
             <h1 id="titulo">Desacelere.<br />Uma peça<br /><em>de cada vez.</em></h1>
             <p className="intro">Uma mesa acolhedora, peças espalhadas e a alegria de ver tudo se encaixar. No seu ritmo.</p>
             <PuzzleChoice />
-            <p id="aviso" className="development-note">Explore a mesa · Peças e encaixes em desenvolvimento.</p>
+            <p id="aviso" className="development-note">Monte no seu ritmo · Seu progresso continua salvo neste navegador.</p>
           </div>
           <div className="illustration" aria-hidden="true">
             <div className="table-label">UM RESPIRO NO SEU DIA</div>

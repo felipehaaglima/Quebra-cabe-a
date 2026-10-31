@@ -134,3 +134,11 @@ A decisão revisada deve registrar motivo, impactos e plano de migração.
 - Pointerup fornece a posição final da peça antes do commit, mesmo se faltar pointermove. Correção coberta por regressão unitária e navegador touch/mouse; teste físico iOS/Android permanece pendente.
 
 Validação desta entrega: lint, typecheck, 107 testes unitários, build de produção e 40 testes Playwright passaram. Viewports: 390×844 com toque emulado e 1440×900 com mouse. Inclui bolsas em ambas as dificuldades, montagem completa e retomada, câmera/guia, soltura sem último movimento, cancelamentos, inventário integral, migração e conflito de revisão (unitários), save incompatível preservado e download de backup (navegador). Capturas em `test-results/` (não versionadas). Teste físico em Android/iOS e sincronização entre dispositivos continuam pendentes.
+
+## Fase 4 — UI, feedback e economia local (31/10/2026)
+
+Escopo completo autorizado pelo usuário. Prioridade de UI: mesa dominante, quatro atalhos, controles contextuais e ferramentas recolhidas. Feedback visual é finito, sem ticker contínuo, desabilitado por movimento reduzido do sistema/interno ou qualidade econômica. Áudio procedural original (proveniência em `public/audio/LICENSE.md`), opcional e iniciado após gesto; sem música ou serviço online.
+
+Recompensas ficam no motor puro e ledger do snapshot v3, jamais no renderer. +1/conexão; bônus configurado +20/+30. Ledger por definição atravessa nova montagem para impedir farming; saldos de 24/48 são independentes. Migração marca conexões antigas como premiadas com valor zero, sem gerar moeda retroativa. Novo puzzle reinicia a mesma definição determinística, com confirmação, mantendo preferências/saldo/ledger. Não adiciona catálogo, wallet global ou backend.
+
+A implementação da F4.3 não equivale à aprovação de release em aparelhos reais. Chromium emulado não comprova Safari iOS/Chrome Android físicos, qualidade sonora nem FPS em celulares. CI existente foi ajustada para dois workers; sua execução remota e o deploy Vercel precisam ser conferidos após push.

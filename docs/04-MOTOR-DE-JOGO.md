@@ -1,6 +1,6 @@
 # 04 — Motor do puzzle, geometria, câmera e encaixes
 
-**Objetivo:** regras determinísticas para qualquer renderizador. Este documento contém **contratos e exemplos orientadores**; orientam a implementação incremental. Câmera, malha, distribuição, grupos rígidos, snaps e conclusão dos demos de 24/48 peças existem em `src/game/core`. Bolsas e persistência local foram acrescentadas nas F3.1/F3.2; recompensas ficam para a F4.2. A implementação de grupos fica em `src/game/core/puzzle/groups.ts`: translation + rotate(canonicalCenter, quarterTurn), sem coordenadas de câmera no estado do puzzle.
+**Objetivo:** regras determinísticas para qualquer renderizador. Este documento contém **contratos e exemplos orientadores**; orientam a implementação incremental. Câmera, malha, distribuição, grupos rígidos, snaps e conclusão dos demos de 24/48 peças existem em `src/game/core`. Bolsas e persistência local foram acrescentadas nas F3.1/F3.2; recompensas locais são aplicadas pelo motor na F4.2. A implementação de grupos fica em `src/game/core/puzzle/groups.ts`: translation + rotate(canonicalCenter, quarterTurn), sem coordenadas de câmera no estado do puzzle.
 
 ## 1. Espaços de coordenadas
 
@@ -274,3 +274,7 @@ type GameFeedbackEvent =
 Antes de confirmar a soltura, o controlador aplica as coordenadas de pointerup em world space, cobrindo navegadores que omitem o último pointermove. Cancelamentos não aplicam essa posição. Com guia ligado, mesmo um toque/pequeno ajuste pode alinhar a seleção próxima e orientada a 0°.
 
 Bolsas associam IDs de peças soltas ao inventário, sem excluir sua geometria ou grupo canônico. Peças guardadas não participam do hit test nem dos candidatos de encaixe. Retirar remove a associação e posiciona a mesma peça ao lado da bolsa, respeitando os limites da mesa. O snapshot durante arraste usa a última transformação confirmada.
+
+## Recompensas (F4.2)
+
+Após um snap canônico, `claimRewards` compara as chaves de conexões e conclusão com o ledger persistido. O controlador atualiza saldo/ledger antes de publicar o snapshot e só então entrega eventos de feedback ao adaptador de áudio/visual. Publicar UI, selecionar, girar ou aproximar isoladamente no guia não cria recompensa. Nova montagem preserva ledger por definição, impedindo replays premiados. O renderer não altera saldo.

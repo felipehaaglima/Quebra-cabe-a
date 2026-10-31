@@ -23,7 +23,7 @@ GitHub (main + branches/PRs)
 
 **Separação fundamental:** o motor deve funcionar sem PixiJS, DOM, React, Supabase ou Next.js. A cena é um adaptador visual para estado e comandos. Isso torna snapshots, multiplayer, replay e testes determinísticos viáveis.
 
-**Implementação atual (F3.2):** o estado de domínio fica em controladores TypeScript, com React para a interface. Zustand ainda não foi necessário. `src/game/persistence` isola Dexie e a validação/migração Zod; o motor puro não importa dependências de armazenamento.
+**Implementação atual (F4):** o estado de domínio fica em controladores TypeScript, com React para a interface. Zustand ainda não foi necessário. `src/game/persistence` isola Dexie e a validação/migração Zod; o motor puro não importa dependências de armazenamento.
 
 ## 2. Stack proposta
 
@@ -180,3 +180,7 @@ Eventos são conceituais. O motor de grupos deverá operar com groupId e movimen
 - https://pixijs.com/8.x/guides/components/events
 - https://vercel.com/docs/plans
 - https://supabase.com/docs/guides/realtime
+
+## Fase 4 — adaptadores de feedback e HUD
+
+`GameHud` separa controles/menus da inicialização de Pixi. `src/game/feedback` contém síntese Web Audio e brilho finito, destruídos ao sair; não escreve economia. `core/puzzle/rewards.ts` aplica regras puras e idempotentes, e `core/preferences.ts` define preferências. O snapshot v3 valida/migra ledger e preferências. O renderer opera sob demanda; efeitos usam RAF apenas durante sua duração, sem ticker permanente.

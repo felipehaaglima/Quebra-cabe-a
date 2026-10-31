@@ -1,10 +1,11 @@
+import { ready } from './helpers';
 import { expect, test } from '@playwright/test';
 
 test('pinça e giro com dois dedos ou zoom com roda do mouse', async ({ page, isMobile }, testInfo) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/play');
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   const canvas = page.locator('canvas');
   const view = page.getByLabel('Visão da mesa');
   const box = (await canvas.boundingBox())!;

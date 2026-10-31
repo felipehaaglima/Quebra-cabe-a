@@ -1,3 +1,4 @@
+import { ready } from './helpers';
 import { expect, test } from '@playwright/test';
 
 test('mesa renderiza, navega, redimensiona e libera o canvas ao sair', async ({ page, isMobile }, testInfo) => {
@@ -6,7 +7,7 @@ test('mesa renderiza, navega, redimensiona e libera o canvas ao sair', async ({ 
   await page.goto('/play');
   const canvas = page.locator('canvas');
   const view = page.getByLabel('Visão da mesa');
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   await expect(canvas).toHaveCount(1);
   await expect(view).toHaveText('100% · 0°');
   // Verify actual pixels from a real WebGL render, not just canvas existence.
@@ -55,10 +56,10 @@ test('mesa renderiza, navega, redimensiona e libera o canvas ao sair', async ({ 
   await expect(canvas).toHaveCount(0);
   await page.getByRole('link', { name: 'Iniciar' }).click();
   await expect(canvas).toHaveCount(1);
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   await page.reload();
   await expect(view).toHaveText('100% · 0°');
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   expect(errors).toEqual([]);
 });
 
@@ -73,6 +74,7 @@ test('explica indisponibilidade gráfica e permite tentar novamente', async ({ p
   });
   await page.goto('/play');
   await expect(page.getByRole('alert').filter({ hasText: 'Não foi possível abrir a mesa' })).toContainText('Não foi possível abrir a mesa');
+  await page.getByRole('button', { name: 'Ferramentas', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Ampliar zoom' })).toBeDisabled();
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'Não foi possível abrir a mesa' })).toContainText('Não foi possível abrir a mesa');

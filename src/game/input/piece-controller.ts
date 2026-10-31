@@ -1,3 +1,7 @@
+import { defaultPreferences, type GamePreferences } from '../core/preferences';
+import { claimRewards, type RewardEntry } from '../core/puzzle/rewards';
+import type { FeedbackEvent } from '../feedback/audio';
+import { distributePieces } from '../core/puzzle/puzzle';
 import { matGuideHint, releaseWithGuide, type MatGuideHint } from '../core/puzzle/mat-guide';
 import { boundBag, hitBag, initialBags, storePiece, type BagState } from '../core/puzzle/bags';
 import type { ModelSnapshot } from '../persistence/snapshot';
@@ -15,7 +19,7 @@ export interface PieceInput {
   select(id: string | null): void;
   snap?(zoom: number): boolean;
 }
-export type GroupInfo = ReturnType<typeof puzzleProgress> & { selectedMembers: readonly string[]; guideEnabled: boolean; guideHint: MatGuideHint; bags: readonly BagState[]; hiddenIds: readonly string[]; bagPanelOpen: boolean; openBagId: string | null; dropBagId: string | null; notice: string; transient: boolean };
+export type GroupInfo = ReturnType<typeof puzzleProgress> & { selectedMembers: readonly string[]; guideEnabled: boolean; guideHint: MatGuideHint; bags: readonly BagState[]; hiddenIds: readonly string[]; bagPanelOpen: boolean; openBagId: string | null; dropBagId: string | null; notice: string; transient: boolean; balance: number; preferences: GamePreferences };
 
 export class PieceController implements PieceInput {
   placements: Placement[];
@@ -28,12 +32,14 @@ export class PieceController implements PieceInput {
   notice = '';
   completedAt: string | null = null;
   localCoinBalance = 0;
+  rewardLedger: RewardEntry[] = [];
+  preferences = defaultPreferences();
   private bagDrag: { original: BagState; start: Vec2; moved: boolean } | null = null;
   private zoom = 1;
   private order: string[];
   private drag: { original: PieceGroup; start: Vec2; moved: boolean } | null = null;
 
-  constructor(private pieces: readonly PieceGeometry[], placements: readonly Placement[], private definition: PuzzleDefinition, private onChange: (placements: readonly Placement[], selectedId: string | null, info: GroupInfo) => void) {
+  constructor(private pieces: readonly PieceGeometry[], placements: readonly Placement[], private definition: PuzzleDefinition, private onChange: (placements: readonly Placement[], selectedId: string | null, info: GroupInfo) => void, private feedback: (event: FeedbackEvent, earned?: number) => void = () => {}) {
     this.state = createPuzzleState(placements, definition);
     this.placements = placements.map((placement) => ({ ...placement, center: { ...placement.center } }));
     this.order = placements.map((placement) => placement.pieceId);
@@ -51,18 +57,26 @@ export class PieceController implements PieceInput {
     if (progress.completed && !this.completedAt) this.completedAt = new Date().toISOString();
     const pose = this.placements.find((item) => item.pieceId === this.selectedId);
     const drop = this.drag && pose ? hitBag(this.bags, pose.center) : undefined;
-    this.onChange(this.placements, this.selectedId, { ...puzzleProgress(this.state, this.definition), selectedMembers: this.selectedGroup()?.pieceIds ?? [], guideEnabled: this.guideEnabled, guideHint: matGuideHint(this.selectedGroup(), snapTolerance(this.zoom)), bags: this.bags, hiddenIds: this.hiddenIds(), bagPanelOpen: this.bagPanelOpen, openBagId: this.openBagId, dropBagId: drop?.id ?? this.bagDrag?.original.id ?? null, notice: this.notice, transient: !!this.drag || !!this.bagDrag });
+    this.onChange(this.placements, this.selectedId, { ...puzzleProgress(this.state, this.definition), selectedMembers: this.selectedGroup()?.pieceIds ?? [], guideEnabled: this.guideEnabled, guideHint: matGuideHint(this.selectedGroup(), snapTolerance(this.zoom)), bags: this.bags, hiddenIds: this.hiddenIds(), bagPanelOpen: this.bagPanelOpen, openBagId: this.openBagId, dropBagId: drop?.id ?? this.bagDrag?.original.id ?? null, notice: this.notice, transient: !!this.drag || !!this.bagDrag, balance: this.localCoinBalance, preferences: this.preferences });
   }
   refresh() { this.publish(); }
   exportModel(): ModelSnapshot {
     const state = this.drag ? { ...this.state, groups: this.state.groups.map((group) => group.id === this.drag!.original.id ? this.drag!.original : group) } : this.state;
     const bags = this.bagDrag ? this.bags.map((bag) => bag.id === this.bagDrag!.original.id ? this.bagDrag!.original : bag) : this.bags;
-    return structuredClone({ state, bags, order: this.order, guideEnabled: this.guideEnabled, completedAt: this.completedAt, localCoinBalance: this.localCoinBalance });
+    return structuredClone({ state, bags, order: this.order, guideEnabled: this.guideEnabled, completedAt: this.completedAt, localCoinBalance: this.localCoinBalance, rewardLedger: this.rewardLedger, preferences: this.preferences });
   }
   restore(model: ModelSnapshot) {
     this.state = structuredClone(model.state); this.bags = structuredClone(model.bags); this.order = [...model.order];
-    this.guideEnabled = model.guideEnabled; this.completedAt = model.completedAt; this.localCoinBalance = model.localCoinBalance;
+    this.guideEnabled = model.guideEnabled; this.completedAt = model.completedAt; this.localCoinBalance = model.localCoinBalance; this.rewardLedger = structuredClone(model.rewardLedger); this.preferences = { ...model.preferences };
     this.selectedId = null; this.drag = null; this.bagDrag = null;
+  }
+  setPreferences(preferences: GamePreferences) { this.preferences = { ...preferences }; this.publish(); }
+  newPuzzle() {
+    this.finishDrag(false);
+    const placements = distributePieces(this.pieces, this.definition.seed);
+    this.state = createPuzzleState(placements, this.definition); this.order = placements.map((pose) => pose.pieceId);
+    this.bags = initialBags(); this.selectedId = null; this.completedAt = null; this.notice = 'Nova montagem. Moedas e recompensas anteriores foram preservadas.';
+    this.publish();
   }
   openBags(id = this.bags[0]?.id ?? null) { this.bagPanelOpen = true; this.openBagId = id; this.publish(); }
   closeBags() { this.bagPanelOpen = false; this.publish(); }
@@ -131,9 +145,9 @@ export class PieceController implements PieceInput {
     if (!group) {
       const bag = hitBag(this.bags, point, hitSlop);
       if (!bag) return false;
-      this.bagDrag = { original: bag, start: point, moved: false }; return true;
+      this.bagDrag = { original: bag, start: point, moved: false }; this.feedback('grab'); return true;
     }
-    this.drag = { original: group, start: point, moved: false };
+    this.drag = { original: group, start: point, moved: false }; this.feedback('grab');
     return true;
   }
   move(point: Vec2) {
@@ -146,6 +160,7 @@ export class PieceController implements PieceInput {
     }
     if (!this.drag) return;
     const { original, start } = this.drag;
+    if (!this.drag.moved) this.feedback('drag');
     this.drag.moved = true;
     this.replace(boundGroup({ ...original, translation: { x: original.translation.x + point.x - start.x, y: original.translation.y + point.y - start.y } }, this.pieces, this.definition));
   }
@@ -158,7 +173,7 @@ export class PieceController implements PieceInput {
     const bag = drag && pose ? hitBag(this.bags, pose.center) : undefined;
     if (bag) { this.storeSelected(bag.id); return; }
     if (drag && (drag.moved || this.guideEnabled) && this.snap(zoom)) return;
-    if (drag) this.publish();
+    if (drag) { this.feedback('drop'); this.publish(); }
   }
   snap(zoom = 1): boolean {
     this.finishDrag(true);
@@ -168,7 +183,12 @@ export class PieceController implements PieceInput {
     const eligible = { ...this.state, groups: this.state.groups.filter((item) => !item.pieceIds.some((id) => hidden.has(id))) };
     const next = releaseWithGuide(eligible, group.id, zoom, this.guideEnabled, this.pieces, this.definition);
     if (next === eligible) return false;
+    const previousConnections = this.state.confirmedConnections.length;
     this.state = { ...next, groups: [...this.state.groups.filter((item) => item.pieceIds.some((id) => hidden.has(id))), ...next.groups] };
+    const wasComplete = !!this.completedAt;
+    const reward = claimRewards(this.state, this.definition, this.rewardLedger);
+    this.rewardLedger = reward.ledger; this.localCoinBalance += reward.earned;
+    this.feedback(!wasComplete && puzzleProgress(this.state, this.definition).completed ? 'complete' : this.state.confirmedConnections.length > previousConnections ? 'snap' : 'drop', reward.earned);
     // The newly merged group is brought forward as one unit.
     this.select(this.selectedId);
     return true;

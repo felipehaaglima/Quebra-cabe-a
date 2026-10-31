@@ -1,3 +1,4 @@
+import { ready } from './helpers';
 import { expect, test } from '@playwright/test';
 
 test('24 peças, referência e distribuição reproduzível após recarregar', async ({ page, isMobile }, testInfo) => {
@@ -8,12 +9,13 @@ test('24 peças, referência e distribuição reproduzível após recarregar', a
   expect(await asset.text()).toContain('viewBox="0 0 800 600"');
   await page.goto('/play');
   const canvas = page.locator('canvas');
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   await expect(canvas).toHaveAttribute('data-piece-count', '24');
   await expect(page.getByText('Lago sereno · 24 peças', { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(/Arraste uma peça para movê-la/)).toBeVisible();
+  await page.getByText('Ajuda e atalhos', { exact: true }).click();
+  await expect(page.getByText(/Arraste peças para montar/)).toBeVisible();
   const initial = await canvas.screenshot();
-  const reference = page.locator('summary', { hasText: 'Ver imagem' });
+  const reference = page.getByRole('button', { name: 'Ver imagem', exact: true });
   const target = (await reference.boundingBox())!;
   expect(target.height).toBeGreaterThanOrEqual(44);
   if (isMobile) await reference.tap(); else await reference.click();
@@ -28,7 +30,7 @@ test('24 peças, referência e distribuição reproduzível após recarregar', a
   await page.getByRole('button', { name: 'Centralizar' }).click();
   expect(await canvas.screenshot()).toEqual(initial);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   await expect(canvas).toHaveAttribute('data-piece-count', '24');
   expect(await canvas.screenshot()).toEqual(initial);
   await page.screenshot({ path: testInfo.outputPath('pecas.png'), fullPage: true });
@@ -44,7 +46,7 @@ test('falha no asset libera a mesa e permite carregar novamente', async ({ page 
   await expect(page.locator('canvas')).toHaveCount(0);
   fail = false;
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   await expect(page.locator('canvas')).toHaveCount(1);
   await expect(page.locator('canvas')).toHaveAttribute('data-piece-count', '24');
 });

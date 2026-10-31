@@ -73,9 +73,9 @@ describe('bolsas e salvamento', () => {
   });
   it('migra V1 e rejeita inventário incompleto, duplicado, formato futuro e conexões adulteradas', () => {
     const { payload } = setup();
-    const current = { ...payload(), schemaVersion: 2, puzzleId: DEMO.id, definitionKey: definitionKey(DEMO), revision: 1, savedAt: new Date().toISOString() };
+    const current = { ...payload(), schemaVersion: 3, puzzleId: DEMO.id, definitionKey: definitionKey(DEMO), revision: 1, savedAt: new Date().toISOString() };
     const v1 = { ...current, schemaVersion: 1, model: { ...current.model, guideEnabled: undefined, localCoinBalance: undefined } };
-    expect(decodeSave(v1, DEMO).schemaVersion).toBe(2);
+    expect(decodeSave(v1, DEMO).schemaVersion).toBe(3);
     expect(decodeSave(v1, DEMO).model.guideEnabled).toBe(false);
     expect(() => decodeSave({ ...current, schemaVersion: 99 }, DEMO)).toThrow();
     expect(() => decodeSave({ ...current, model: { ...current.model, state: { ...current.model.state, groups: current.model.state.groups.slice(1) } } }, DEMO)).toThrow();

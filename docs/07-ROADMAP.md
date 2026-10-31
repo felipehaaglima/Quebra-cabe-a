@@ -151,6 +151,8 @@
 
 ### F4.1 — Sons e celebração
 
+**Implementada:** síntese Web Audio original após gesto, efeitos curtos de pegar/arrastar/soltar, snap, moedas e conclusão, volume e mute persistidos. Brilho finito sem ticker contínuo; celebração dispensável e alinhamento opcional ao tapete. `prefers-reduced-motion`, preferência interna e qualidade econômica suprimem partículas. Qualidade econômica limita DPR a 1; automática limita a 2. Sem música, gravações externas ou vibração obrigatória.
+
 - Efeitos de grab, drag, snap, moedas e conclusão; volume e mute.
 - Brilho/partículas discretas, reduzir movimento e ajuste de qualidade.
 - Animação de finalização sobre o tapete, sem ocultar obra.
@@ -159,6 +161,8 @@
 
 ### F4.2 — Moedas e continuidade
 
+**Implementada:** +1 por conexão canônica única; bônus configurado em `rewardRules` (+20 para 24 / +30 para 48). Saldo por definição e ledger persistido no snapshot v3. Nova montagem exige confirmação e preserva ledger/saldo/preferências; não paga novamente conexões nem bônus já premiados. Migração v1/v2 marca conexões anteriores a zero, sem crédito retroativo. Sem loja ou compras reais.
+
 - +1 por conexão única, bônus de conclusão configurável, saldo local demonstrativo.
 - Ledger local idempotente, prevenção de farming, botão "novo puzzle".
 - Sem loja real ou compra online nesta etapa.
@@ -166,6 +170,12 @@
 **Aceite:** salvar e recarregar não duplica moedas.
 
 ### F4.3 — Teste final de MVP
+
+**Implementação e validação automatizada:** HUD separado do canvas, quatro atalhos principais, ações contextuais, painel recolhível de visão/peças/conforto/ajuda e status discreto. Dicas/seleção não redimensionam a mesa; alertas de armazenamento permanecem visíveis. Fluxos de 24/48 peças, touch/mouse, cancelamento, resize, restauração, moedas, mute/movimento reduzido e nova montagem cobertos. Workflow existente de qualidade ajustado para dois workers de navegador.
+
+Evidências: [validação da Fase 4](10-VALIDACAO-FASE-4.md).
+
+**Aceite externo pendente:** Chrome Android e Safari iOS físicos, avaliação de som/conforto/performance em aparelho real e confirmação do deploy Vercel após integração. Automação Chromium não substitui esses itens; o marco público do MVP não está declarado concluído.
 
 - Jogador novo consegue iniciar e montar sem login.
 - UX e performance testadas no **celular real** e no desktop.

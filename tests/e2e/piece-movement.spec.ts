@@ -1,3 +1,4 @@
+import { ready } from './helpers';
 import { expect, test, type Page, type CDPSession } from '@playwright/test';
 import { DEMO, distributePieces, generatePieces } from '../../src/game/core/puzzle/puzzle';
 import { centerCamera, worldToScreen, type Vec2 } from '../../src/game/core/camera/camera';
@@ -19,7 +20,7 @@ async function drag(page: Page, from: Vec2, to: Vec2, touch: boolean) {
 
 async function scene(page: Page) {
   await page.goto('/play');
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   const canvas = page.locator('canvas');
   const box = (await canvas.boundingBox())!;
   const viewport = { width: box.width, height: box.height };
@@ -64,7 +65,7 @@ test('move e gira uma peça com câmera em quatro orientações, por mouse/toque
   await expect(page.getByRole('button', { name: 'Girar peça', exact: true })).toBeEnabled();
   await expect(canvas).toHaveAttribute('data-piece-count', '24');
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   await expect(selection).toHaveValue('');
   const restored = { x: position.x, y: position.y + 20 / centerCamera({ width: (await canvas.boundingBox())!.width, height: (await canvas.boundingBox())!.height }).zoom };
   await drag(page, point(restored, 3 * Math.PI / 2), point({ x: 0, y: 0 }, 3 * Math.PI / 2), isMobile);
@@ -72,11 +73,11 @@ test('move e gira uma peça com câmera em quatro orientações, por mouse/toque
   expect(errors).toEqual([]);
 });
 
-test('cancelamento desfaz o drag; segundo dedo devolve o controle à câmera', async ({ page, isMobile }) => {
+test('cancelamento desfaz o drag; segundo dedo devolve o controle à câmera', async ({ page, isMobile }, testInfo) => {
   const { canvas, point } = await scene(page);
   const center = point({ x: 0, y: 0 });
   await drag(page, point(first.center), center, isMobile);
-  const original = await canvas.screenshot();
+  const original = await canvas.screenshot({ path: testInfo.outputPath('original.png') });
   let session: CDPSession | undefined;
   if (isMobile) {
     session = await page.context().newCDPSession(page);
@@ -100,6 +101,9 @@ test('cancelamento desfaz o drag; segundo dedo devolve o controle à câmera', a
     await session.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
     await session.detach();
     await canvas.focus(); await page.keyboard.press('Home');
-    expect(await canvas.screenshot()).toEqual(original);
+    await expect(page.getByLabel('Visão da mesa')).toHaveText('100% · 0°');
+    // Compare the scene with the same focus; keyboard focus adds an outline.
+    await page.getByLabel('Selecionar peça').focus();
+    expect((await canvas.screenshot({ path: testInfo.outputPath('after-home.png') })).equals(original)).toBe(true);
   }
 });

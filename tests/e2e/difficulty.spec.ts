@@ -1,3 +1,4 @@
+import { ready } from './helpers';
 import { expect, test } from '@playwright/test';
 
 test('escolhe 48 peças e amplia a seleção, preservando cancelamento e resize', async ({ page, isMobile }, testInfo) => {
@@ -7,7 +8,7 @@ test('escolhe 48 peças e amplia a seleção, preservando cancelamento e resize'
   await page.getByLabel('Número de peças').selectOption('48');
   await page.getByRole('link', { name: 'Iniciar', exact: true }).click();
   await expect(page).toHaveURL(/pieces=48/);
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   const canvas = page.locator('canvas');
   await expect(canvas).toHaveAttribute('data-piece-count', '48');
   await expect(page.getByLabel('Progresso do puzzle')).toHaveText('0 de 82 encaixes · 48 grupos');
@@ -43,13 +44,13 @@ test('escolhe 48 peças e amplia a seleção, preservando cancelamento e resize'
   await expect(canvas).toHaveAttribute('data-piece-count', '48');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   await expect(canvas).toHaveAttribute('data-piece-count', '48');
   expect(errors).toEqual([]);
 });
 
 test('parâmetro inválido preserva o padrão de 24 peças', async ({ page }) => {
   await page.goto('/play?pieces=100000');
-  await expect(page.getByRole('button', { name: 'Centralizar' })).toBeEnabled();
+  await ready(page);
   await expect(page.locator('canvas')).toHaveAttribute('data-piece-count', '24');
 });
