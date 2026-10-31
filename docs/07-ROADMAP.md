@@ -151,7 +151,7 @@
 
 ### F4.1 — Sons e celebração
 
-**Implementada:** síntese Web Audio original após gesto, efeitos curtos de pegar/arrastar/soltar, snap, moedas e conclusão, volume e mute persistidos. Brilho finito sem ticker contínuo; celebração dispensável e alinhamento opcional ao tapete. `prefers-reduced-motion`, preferência interna e qualidade econômica suprimem partículas. Qualidade econômica limita DPR a 1; automática limita a 2. Sem música, gravações externas ou vibração obrigatória.
+**Implementada:** síntese Web Audio original após gesto, efeitos curtos de pegar/arrastar/soltar, snap, moedas e conclusão, volume e mute persistidos. Brilho finito sem ticker contínuo; celebração dispensável e alinhamento opcional ao tapete. `prefers-reduced-motion`, preferência interna e qualidade econômica suprimem partículas. Qualidade econômica limita DPR a 1; automática limita a 2. Sem música, gravações externas ou vibração obrigatória. Revisão para Android: retomada ao fim do toque/clique, primeiro efeito retido brevemente, níveis ajustados e Testar som com status em Ferramentas.
 
 - Efeitos de grab, drag, snap, moedas e conclusão; volume e mute.
 - Brilho/partículas discretas, reduzir movimento e ajuste de qualidade.

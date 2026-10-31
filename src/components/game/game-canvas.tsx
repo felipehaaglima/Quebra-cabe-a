@@ -20,6 +20,8 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
   const host = useRef<HTMLDivElement>(null);
   const controller = useRef<CameraController | null>(null);
   const pieceController = useRef<PieceController | null>(null);
+  const audioPlayer = useRef<GameAudio | null>(null);
+  const [audioStatus, setAudioStatus] = useState('Toque em Testar som para ativar o áudio.');
   const effects = useRef<{ stop: () => void; align: () => void } | null>(null);
   const saveSession = useRef<LocalSaveSession | null>(null);
   const [preferences, setPreferences] = useState(defaultPreferences);
@@ -51,12 +53,13 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
       const loaded = await persistence.load();
       if (cancelled) { await persistence.close(); return; }
       const app = new Application();
-      const audio = new GameAudio(loaded?.model.preferences ?? defaultPreferences());
+      const audio = new GameAudio(loaded?.model.preferences ?? defaultPreferences(), setAudioStatus);
+      audioPlayer.current = audio;
       const media = window.matchMedia('(prefers-reduced-motion: reduce)');
       let glow: import('@/game/feedback/visual').PuzzleGlow | undefined;
-      const unlock = () => audio.unlock();
+      const unlock = () => { void audio.unlock(); };
       const silence = () => audio.stop();
-      window.addEventListener('pointerdown', unlock, { capture: true }); window.addEventListener('keydown', unlock, { capture: true });
+      for (const event of ['pointerdown', 'pointerup', 'click', 'keydown']) window.addEventListener(event, unlock, { capture: true });
       window.addEventListener('blur', silence);
       const motionChange = () => { if (media.matches) glow?.clear(); };
       media.addEventListener('change', motionChange);
@@ -70,8 +73,8 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
         if (released) return;
         released = true;
         saving = false;
-        audio.destroy(); glow?.destroy(); effects.current = null;
-        window.removeEventListener('pointerdown', unlock, { capture: true }); window.removeEventListener('keydown', unlock, { capture: true }); window.removeEventListener('blur', silence); media.removeEventListener('change', motionChange);
+        audio.destroy(); if (audioPlayer.current === audio) audioPlayer.current = null; glow?.destroy(); effects.current = null;
+        for (const event of ['pointerdown', 'pointerup', 'click', 'keydown']) window.removeEventListener(event, unlock, { capture: true }); window.removeEventListener('blur', silence); media.removeEventListener('change', motionChange);
         observer?.disconnect(); input?.destroy(); pieceController.current = null;
         if (flushOnHide) { window.removeEventListener('pagehide', flushOnHide); document.removeEventListener('visibilitychange', flushOnHide); }
         void persistence.close();
@@ -176,7 +179,7 @@ export default function GameCanvas({ count = 24 }: { count?: 24 | 48 }) {
       {!ready && <div className={styles.loading}><p role={failed ? 'alert' : 'status'}>{status}</p>{failed && <button onClick={() => { setFailed(false); setStatus('Preparando sua mesa…'); setAttempt((value) => value + 1); }}>Tentar novamente</button>}</div>}
       {celebration && <aside className={styles.celebration} aria-label="Conclusão"><p role="status">{celebration}</p><button onClick={() => { pieceController.current?.alignCompleted(); controller.current?.act('center'); effects.current?.align(); }}>Alinhar no tapete</button><button onClick={() => { effects.current?.stop(); setCelebration(''); }}>Continuar olhando</button></aside>}
     </div>
-    <GameHud ready={ready} count={count} view={view} saveStatus={saveStatus} backupAvailable={backupAvailable} progress={progress} selection={selection} options={pieceOptions} hidden={bagView.hidden} guide={guide.enabled} hint={hint} balance={balance} preferences={preferences}
+    <GameHud audioStatus={audioStatus} testAudio={() => { void audioPlayer.current?.preview(); }} ready={ready} count={count} view={view} saveStatus={saveStatus} backupAvailable={backupAvailable} progress={progress} selection={selection} options={pieceOptions} hidden={bagView.hidden} guide={guide.enabled} hint={hint} balance={balance} preferences={preferences}
       act={act} bags={() => pieceController.current?.openBags()} toggleGuide={() => pieceController.current?.setGuideEnabled(!guide.enabled)} select={(id) => pieceController.current?.select(id)} rotate={() => pieceController.current?.rotate()} snap={() => pieceController.current?.snap(controller.current?.camera.zoom ?? 1)}
       focus={() => { const pose = pieceController.current?.placements.find((item) => item.pieceId === selection.id); if (pose) controller.current?.focus(pose.center); }} align={() => { pieceController.current?.alignCompleted(); effects.current?.align(); }} backup={() => saveSession.current?.downloadBackup()} configure={(value) => pieceController.current?.setPreferences(value)} restart={() => { effects.current?.stop(); pieceController.current?.newPuzzle(); controller.current?.act('center'); setCelebration(''); }} />
     {liveModel && <BagPanel model={liveModel} bags={bagView.bags} open={bagView.open} activeId={bagView.activeId} definition={definition} locate={(bag) => { pieceController.current?.closeBags(); controller.current?.focus(bag.center); }} />}

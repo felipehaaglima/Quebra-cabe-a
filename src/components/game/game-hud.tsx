@@ -6,7 +6,7 @@ import type { CameraAction } from '@/game/input/camera-controller';
 import styles from './game.module.css';
 
 type Props = {
-  ready: boolean; count: number; view: string; saveStatus: string; backupAvailable: boolean;
+  audioStatus: string; testAudio: () => void; ready: boolean; count: number; view: string; saveStatus: string; backupAvailable: boolean;
   progress: { connections: number; expected: number; groupCount: number; completed: boolean };
   selection: { id: string | null; quarterTurn: number; size: number };
   options: { id: string; name: string }[]; hidden: readonly string[]; guide: boolean; hint: string;
@@ -44,6 +44,8 @@ export function GameHud(p: Props) {
       </div>
       <div><h2>Conforto</h2><label><input type="checkbox" checked={p.preferences.muted} onChange={(e) => p.configure({ ...p.preferences, muted: e.target.checked })} /> Silenciar sons</label>
         <label>Volume dos efeitos<input type="range" min="0" max="1" step="0.05" value={p.preferences.volume} onChange={(e) => p.configure({ ...p.preferences, volume: Number(e.target.value) })} /></label>
+        <button disabled={!p.ready || p.preferences.muted || p.preferences.volume === 0} onClick={p.testAudio}>Testar som</button>
+        <p role="status" aria-label="Estado do áudio">{p.audioStatus}</p>
         <label><input type="checkbox" checked={p.preferences.reducedMotion} onChange={(e) => p.configure({ ...p.preferences, reducedMotion: e.target.checked })} /> Reduzir movimento</label>
         <label>Qualidade da mesa<select value={p.preferences.quality} onChange={(e) => p.configure({ ...p.preferences, quality: e.target.value as GamePreferences['quality'] })}><option value="auto">Automática</option><option value="low">Econômica</option></select></label>
         <p>Sons e animações são opcionais. O sistema também pode reduzir o movimento.</p>
